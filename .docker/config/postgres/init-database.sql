@@ -1,0 +1,3 @@
+CREATE DATABASE hrm_db;
+
+GRANT ALL PRIVILEGES ON DATABASE hrm_db TO postgres;
