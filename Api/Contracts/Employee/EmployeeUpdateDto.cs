@@ -4,8 +4,6 @@ namespace Api.Contracts.Employee
 {
     public class EmployeeUpdateDto
     {
-        [Required]
-        public int Employee_Id { get; set; }
         public string? First_Name { get; set; }
         public string? Last_Name { get; set; }
         public string? Position { get; set; }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Applications.Interfaces;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.Employee;
@@ -7,6 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
@@ -37,6 +39,14 @@ namespace ApiHrm.Controllers
         {
             var result = await _employeeService.CreateEmployeeAsync(createDto);
             return CreatedAtAction(nameof(GetById), new { id = result.Employee_Id }, result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Update(int id, EmployeeUpdateDto updateDto)
+        {
+            var success = await _employeeService.UpdateEmployeeAsync(id, updateDto);
+            if (!success) return NotFound();
+            return NoContent();
         }
     }
 }

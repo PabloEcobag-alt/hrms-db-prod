@@ -12,6 +12,7 @@ namespace ApiHrm.Infrastructures.Persistence
         public DbSet<Checklist> Checklists { get; set; }
         public DbSet<Applicant> Applicants { get; set; }
         public DbSet<Exit> Exits { get; set; }
+        public DbSet<EmployeeHistory> EmployeeHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,13 @@ namespace ApiHrm.Infrastructures.Persistence
             .WithMany ( a => a.Checklists )
             .HasForeignKey ( c => c.Applicant_ID )
             .OnDelete ( DeleteBehavior.Cascade );
+
+            //Employee History
+            modelBuilder.Entity<EmployeeHistory>()
+                .HasOne(eh => eh.Employee)
+                .WithMany()
+                .HasForeignKey(eh => eh.Employee_ID)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

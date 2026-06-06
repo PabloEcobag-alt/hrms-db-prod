@@ -4,6 +4,9 @@ using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.Employee;
 using Applications.Interfaces;
+using System.Security.Claims;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 
 namespace Applications.Services
 {
@@ -11,11 +14,13 @@ namespace Applications.Services
     {
         private readonly hrmAppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public EmployeeService(hrmAppDbContext context, IMapper mapper)
+        public EmployeeService(hrmAppDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<EmployeeReadDto>> GetAllEmployeesAsync()
@@ -50,7 +55,36 @@ namespace Applications.Services
             var employee = await _context.Employees.FindAsync(id);
             if (employee == null) return false;
 
+            // Capture old state for audit trail (limited to 255 chars)
+            var oldStateJson = JsonSerializer.Serialize(employee);
+            var truncatedOldState = oldStateJson.Length > 255 ? oldStateJson.Substring(0, 255) : oldStateJson;
+
             _mapper.Map(updateDto, employee);
+
+            // Capture new state for audit trail (limited to 255 chars)
+            var newStateJson = JsonSerializer.Serialize(employee);
+            var truncatedNewState = newStateJson.Length > 255 ? newStateJson.Substring(0, 255) : newStateJson;
+
+            // Get current user from JWT claims
+            var user = _httpContextAccessor.HttpContext?.User;
+            var changedBy = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                ?? user?.FindFirst("sub")?.Value 
+                ?? user?.FindFirst(ClaimTypes.Email)?.Value 
+                ?? "System";
+
+            // Create audit history record
+            var history = new EmployeeHistory
+            {
+                Employee_ID = employee.Employee_Id,
+                Action_Type = "Update",
+                Old_Value = truncatedOldState,
+                New_Value = truncatedNewState,
+                Changed_By = changedBy,
+                Changed_At = DateTime.UtcNow
+            };
+
+            _context.EmployeeHistories.Add(history);
+            
             return await _context.SaveChangesAsync() > 0;
         }
 
