@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Applications.Interfaces;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.Employee;
+using Applications.Exceptions;
+using System.Security.Claims;
 
 namespace ApiHrm.Controllers
 {
@@ -35,8 +37,38 @@ namespace ApiHrm.Controllers
         [HttpPost]
         public async Task<ActionResult<EmployeeReadDto>> Create(EmployeeCreateDto createDto)
         {
-            var result = await _employeeService.CreateEmployeeAsync(createDto);
-            return CreatedAtAction(nameof(GetById), new { id = result.Employee_Id }, result);
+            try
+            {
+                var result = await _employeeService.CreateEmployeeAsync(createDto, GetChangedBy());
+                return CreatedAtAction(nameof(GetById), new { id = result.Employee_Id }, result);
+            }
+            catch (BusinessValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update([FromRoute] int id, EmployeeUpdateDto updateDto)
+        {
+            try
+            {
+                var updated = await _employeeService.UpdateEmployeeAsync(id, updateDto, GetChangedBy());
+                if (!updated) return NotFound();
+
+                return NoContent();
+            }
+            catch (BusinessValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        private string GetChangedBy()
+        {
+            return User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue(ClaimTypes.Email)
+                ?? "System";
         }
     }
 }

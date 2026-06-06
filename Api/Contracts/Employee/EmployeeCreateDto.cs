@@ -24,7 +24,9 @@ namespace Api.Contracts.Employee
         public string? Payment_Method { get; set; }
 
         [Required]
-        public string Status { get; set; } = "Active";
+        [RegularExpression("^(Probationary|Regular|Resigned|Terminated|AWOL)$",
+            ErrorMessage = "Status must be one of: Probationary, Regular, Resigned, Terminated, AWOL")]
+        public string Status { get; set; } = "Probationary";
 
         [Required(ErrorMessage = "A role must be assigned")]
         public int Role_Id { get; set; }

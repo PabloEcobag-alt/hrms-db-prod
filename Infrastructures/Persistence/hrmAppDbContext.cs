@@ -12,6 +12,9 @@ namespace ApiHrm.Infrastructures.Persistence
         public DbSet<Checklist> Checklists { get; set; }
         public DbSet<Applicant> Applicants { get; set; }
         public DbSet<Exit> Exits { get; set; }
+        public DbSet<EmployeeHistory> EmployeeHistories { get; set; }
+        public DbSet<LeaveBalance> LeaveBalances { get; set; }
+        public DbSet<LeaveCode> LeaveCodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +43,27 @@ namespace ApiHrm.Infrastructures.Persistence
             .WithMany ( a => a.Checklists )
             .HasForeignKey ( c => c.Applicant_ID )
             .OnDelete ( DeleteBehavior.Cascade );
+
+            //Employee History (Audit Logging)
+            modelBuilder.Entity<EmployeeHistory>()
+            .HasOne ( h => h.Employee )
+            .WithMany ( e => e.EmployeeHistories )
+            .HasForeignKey ( h => h.Employee_ID )
+            .OnDelete ( DeleteBehavior.Cascade );
+
+            //Leave Balance -> Employee
+            modelBuilder.Entity<LeaveBalance>()
+            .HasOne ( lb => lb.Employee )
+            .WithMany ( e => e.LeaveBalances )
+            .HasForeignKey ( lb => lb.Employee_ID )
+            .OnDelete ( DeleteBehavior.Cascade );
+
+            //Leave Balance -> Leave Code
+            modelBuilder.Entity<LeaveBalance>()
+            .HasOne ( lb => lb.LeaveCode )
+            .WithMany ( lc => lc.LeaveBalances )
+            .HasForeignKey ( lb => lb.Leave_Code_ID )
+            .OnDelete ( DeleteBehavior.Restrict );
 
         }
     }
