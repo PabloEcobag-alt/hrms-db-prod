@@ -26,7 +26,5 @@ namespace ApiHrm.Domains.Entities
         public virtual Role role { get; set; }
         public ICollection<Exit> Exits { get; set; }
         public ICollection<Document> Documents { get; set; }
-        public virtual ICollection<EmployeeHistory> EmployeeHistories { get; set; } = new List<EmployeeHistory>();
-        public virtual ICollection<LeaveBalance> LeaveBalances { get; set; } = new List<LeaveBalance>();
     }
 }

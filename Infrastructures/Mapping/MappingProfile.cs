@@ -27,9 +27,7 @@ namespace ApiHrm.Infrastructures.Mapping
             CreateMap<EmployeeCreateDto, Employee>()
                 .ForMember(dest => dest.Employee_Id, opt => opt.Ignore());
 
-            CreateMap<EmployeeUpdateDto, Employee>()
-                .ForMember(dest => dest.Employee_Id, opt => opt.Ignore())
-                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<EmployeeUpdateDto, Employee>();
 
             CreateMap<RoleCreateDto, Role>();
             CreateMap<Role, RoleReadDto>();

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Applications.Interfaces;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.RoleExit;
@@ -7,6 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;

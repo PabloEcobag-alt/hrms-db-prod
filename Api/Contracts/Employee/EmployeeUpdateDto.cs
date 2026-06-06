@@ -4,8 +4,6 @@ namespace Api.Contracts.Employee
 {
     public class EmployeeUpdateDto
     {
-        [Required]
-        public int Employee_Id { get; set; }
         public string? First_Name { get; set; }
         public string? Last_Name { get; set; }
         public string? Position { get; set; }
@@ -13,8 +11,6 @@ namespace Api.Contracts.Employee
         public string? Email { get; set; }
         public string? Contact_Details { get; set; }
         public string? Payment_Method { get; set; }
-        [RegularExpression("^(Probationary|Regular|Resigned|Terminated|AWOL)$",
-            ErrorMessage = "Status must be one of: Probationary, Regular, Resigned, Terminated, AWOL")]
         public string? Status { get; set; }
         public int? Role_Id { get; set; }
         public DateTime? Hire_Date { get; set; }

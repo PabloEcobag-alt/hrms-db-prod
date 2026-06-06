@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Applications.Interfaces;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.Applicant;
@@ -8,6 +9,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ApplicantsController : ControllerBase
     {
         private readonly IApplicantService _applicantService;
