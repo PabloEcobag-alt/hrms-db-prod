@@ -35,6 +35,7 @@ namespace ApiHrm.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "HR,HRAdmin")]
         public async Task<ActionResult<EmployeeReadDto>> Create(EmployeeCreateDto createDto)
         {
             var result = await _employeeService.CreateEmployeeAsync(createDto);
@@ -42,6 +43,7 @@ namespace ApiHrm.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "HR,HRAdmin")]
         public async Task<ActionResult> Update(int id, EmployeeUpdateDto updateDto)
         {
             var success = await _employeeService.UpdateEmployeeAsync(id, updateDto);

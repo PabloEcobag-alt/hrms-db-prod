@@ -28,6 +28,7 @@ namespace ApiHrm.Controllers
 
         // Updated to use DocumentUploadDto as required by your interface
         [HttpPost]
+        [Authorize(Roles = "HR,HRAdmin")]
         public async Task<ActionResult<DocumentReadDto>> Upload(DocumentUploadDto uploadDto)
         {
             var result = await _documentService.UploadDocumentAsync(uploadDto);
@@ -42,11 +43,26 @@ namespace ApiHrm.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "HR,HRAdmin")]
         public async Task<ActionResult> Delete(int id)
         {
             var success = await _documentService.DeleteDocumentAsync(id);
             if (!success) return NotFound();
             return NoContent();
+        }
+
+        [HttpPost("{id}/verify")]
+        [Authorize(Roles = "HRAdmin")]
+        public async Task<ActionResult> Verify(int id, [FromBody] VerifyDocumentDto dto)
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "unknown";
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            var success = await _documentService.VerifyDocumentAsync(id, dto, userId, role, ipAddress);
+            if (!success) return NotFound();
+
+            return Ok(new { message = "Document verification completed successfully." });
         }
     }
 }

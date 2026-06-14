@@ -32,7 +32,7 @@ namespace api_hrm.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Applicant_ID"));
 
                     b.Property<DateTime>("Application_Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Contact_Details")
                         .HasColumnType("text");
@@ -63,6 +63,150 @@ namespace api_hrm.Migrations
                     b.HasKey("Applicant_ID");
 
                     b.ToTable("r_Apllicant_Records", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.AttendanceLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("attendance_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Is_Manual_Override")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly>("Log_Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Log_Source")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("Time_In")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("Time_Out")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.ToTable("r_Attendance_Log", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("audit_log_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Ip_Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Record_Id")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Record_Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("User_Id")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("User_Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("r_Audit_Log", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.BonusIncentive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("bonus_incentive_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Bonus_Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Incentive_Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Payroll_Run_Id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.HasIndex("Payroll_Run_Id");
+
+                    b.ToTable("r_Bonus_Incentive", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.CashAdvance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("cash_advance_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount_Requested")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.ToTable("r_Cash_Advance", "public");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Checklist", b =>
@@ -127,7 +271,7 @@ namespace api_hrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("upload_date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Document_ID");
 
@@ -138,6 +282,45 @@ namespace api_hrm.Migrations
                     b.ToTable("r_Document", "public");
                 });
 
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmailDispatchLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("email_dispatch_log_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("EmployeeEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("PayslipId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayslipId");
+
+                    b.ToTable("r_Email_Dispatch_Log", "public");
+                });
+
             modelBuilder.Entity("ApiHrm.Domains.Entities.Employee", b =>
                 {
                     b.Property<int>("Employee_Id")
@@ -146,9 +329,15 @@ namespace api_hrm.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Employee_Id"));
 
+                    b.Property<string>("AccountNumber")
+                        .HasColumnType("text");
+
                     b.Property<string>("Contact_Details")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<decimal>("DailyRate")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -160,13 +349,16 @@ namespace api_hrm.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("Hire_Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Last_Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Payment_Method")
+                    b.Property<decimal>("MonthlyBasePay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -188,42 +380,184 @@ namespace api_hrm.Migrations
                     b.ToTable("r_Employee_Record", "public");
                 });
 
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeeDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_document_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Document_Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Expiry_Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("File_Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("Issue_Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("VerifiedByUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.ToTable("r_Employee_Document", "public", t =>
+                        {
+                            t.HasCheckConstraint("CK_Employee_Document_Expiry_After_Issue", "\"Expiry_Date\" > \"Issue_Date\"");
+                        });
+                });
+
             modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeeHistory", b =>
                 {
                     b.Property<int>("History_ID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("History_ID");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("History_ID"));
 
                     b.Property<string>("Action_Type")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("Action_Type");
 
                     b.Property<DateTime>("Changed_At")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("Changed_At");
 
                     b.Property<string>("Changed_By")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("Changed_By");
 
                     b.Property<int>("Employee_ID")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("Employee_ID");
 
                     b.Property<string>("New_Value")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("New_Value");
 
                     b.Property<string>("Old_Value")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Old_Value");
 
                     b.HasKey("History_ID");
 
                     b.HasIndex("Employee_ID");
 
                     b.ToTable("r_Employee_History", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeePayrollRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("payroll_record_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Basic_Pay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Days_Worked")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Net_Pay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OT_Hours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OT_Pay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PagIbig_Deduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Payroll_Run_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PhilHealth_Deduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Sss_Deduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Tax_Deduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Total_Deductions")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.HasIndex("Payroll_Run_Id");
+
+                    b.ToTable("r_Employee_Payroll_Record", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeeShift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("shift_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Effective_Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("End_Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Shift_Code")
+                        .IsRequired()
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.HasIndex("Shift_Code");
+
+                    b.ToTable("r_Employee_Shift", "public");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Exit", b =>
@@ -235,7 +569,7 @@ namespace api_hrm.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Exit_ID"));
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Employee_ID")
                         .HasColumnType("integer");
@@ -273,7 +607,7 @@ namespace api_hrm.Migrations
                     b.Property<int>("Employee_ID")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Leave_Code_ID")
+                    b.Property<int>("LeaveTypeId")
                         .HasColumnType("integer");
 
                     b.Property<int>("Pending_Days")
@@ -289,29 +623,264 @@ namespace api_hrm.Migrations
 
                     b.HasIndex("Employee_ID");
 
-                    b.HasIndex("Leave_Code_ID");
+                    b.HasIndex("LeaveTypeId");
 
                     b.ToTable("r_Leave_Balance", "public");
                 });
 
-            modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveCode", b =>
+            modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveRequest", b =>
                 {
-                    b.Property<int>("Leave_Code_ID")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("leave_request_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("End_Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("LeaveTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("Start_Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.ToTable("r_Leave_Request", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveType", b =>
+                {
+                    b.Property<int>("LeaveTypeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Leave_Code_ID"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LeaveTypeId"));
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("Leave_Code")
+                    b.Property<string>("LeaveTypeName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Leave_Code_ID");
+                    b.HasKey("LeaveTypeId");
 
-                    b.ToTable("r_Leave_Code", "public");
+                    b.ToTable("r_Leave_Type", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.MissingLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("missing_log_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Log_Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.ToTable("r_Missing_Log", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.PagIbigBracket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("pagibig_bracket_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EffectiveYear")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("EmployeeShareRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EmployerShareRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MonthlyContribution")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalaryRangeEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalaryRangeStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("r_PagIbig_Bracket", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.PayoutSummary", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("payout_summary_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("PayrollRunId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayrollRunId");
+
+                    b.ToTable("r_Payout_Summary", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.PayrollRun", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("payroll_run_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BatchReferenceNumber")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("CutOff_End_Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("CutOff_Start_Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("Finalized_At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int?>("Finalized_By")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Payout_Summary_Json")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("r_Payroll_Run", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.Payslip", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("payslip_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Download_Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Email_Retry_Count")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("Email_Sent_At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("Employee_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Payout_Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Payroll_Run_Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Pdf_Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Employee_Id");
+
+                    b.HasIndex("Payroll_Run_Id");
+
+                    b.ToTable("r_Payslip", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.PhilHealthBracket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("philhealth_bracket_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EffectiveYear")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("EmployeeShareRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EmployerShareRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MonthlyContribution")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalaryRangeEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalaryRangeStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("r_PhilHealth_Bracket", "public");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Role", b =>
@@ -329,6 +898,128 @@ namespace api_hrm.Migrations
                     b.HasKey("Role_ID");
 
                     b.ToTable("r_Role", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.ShiftDefinition", b =>
+                {
+                    b.Property<string>("ShiftCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<decimal>("StandardHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval");
+
+                    b.HasKey("ShiftCode");
+
+                    b.ToTable("r_Shift_Definition", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.SssBracket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("sss_bracket_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EffectiveYear")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("EmployeeShareRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("EmployerShareRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MonthlyContribution")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalaryRangeEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SalaryRangeStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("r_Sss_Bracket", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.TaxBracket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("tax_bracket_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AnnualRangeEnd")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AnnualRangeStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BaseTax")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("EffectiveYear")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("r_Tax_Bracket", "public");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.AttendanceLog", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.BonusIncentive", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApiHrm.Domains.Entities.PayrollRun", "PayrollRun")
+                        .WithMany("BonusIncentives")
+                        .HasForeignKey("Payroll_Run_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("PayrollRun");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.CashAdvance", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Checklist", b =>
@@ -359,6 +1050,17 @@ namespace api_hrm.Migrations
                     b.Navigation("employee");
                 });
 
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmailDispatchLog", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Payslip", "Payslip")
+                        .WithMany()
+                        .HasForeignKey("PayslipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Payslip");
+                });
+
             modelBuilder.Entity("ApiHrm.Domains.Entities.Employee", b =>
                 {
                     b.HasOne("ApiHrm.Domains.Entities.Role", "role")
@@ -370,15 +1072,64 @@ namespace api_hrm.Migrations
                     b.Navigation("role");
                 });
 
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeeDocument", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeeHistory", b =>
                 {
                     b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
-                        .WithMany("EmployeeHistories")
+                        .WithMany()
                         .HasForeignKey("Employee_ID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeePayrollRecord", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApiHrm.Domains.Entities.PayrollRun", "PayrollRun")
+                        .WithMany("EmployeePayrollRecords")
+                        .HasForeignKey("Payroll_Run_Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Employee");
+
+                    b.Navigation("PayrollRun");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.EmployeeShift", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApiHrm.Domains.Entities.ShiftDefinition", "ShiftDefinition")
+                        .WithMany("EmployeeShifts")
+                        .HasForeignKey("Shift_Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("ShiftDefinition");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Exit", b =>
@@ -395,20 +1146,80 @@ namespace api_hrm.Migrations
             modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveBalance", b =>
                 {
                     b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
-                        .WithMany("LeaveBalances")
+                        .WithMany()
                         .HasForeignKey("Employee_ID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ApiHrm.Domains.Entities.LeaveCode", "LeaveCode")
+                    b.HasOne("ApiHrm.Domains.Entities.LeaveType", "LeaveType")
                         .WithMany("LeaveBalances")
-                        .HasForeignKey("Leave_Code_ID")
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("LeaveType");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveRequest", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApiHrm.Domains.Entities.LeaveType", "LeaveType")
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
 
-                    b.Navigation("LeaveCode");
+                    b.Navigation("LeaveType");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.MissingLog", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.PayoutSummary", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.PayrollRun", "PayrollRun")
+                        .WithMany("PayoutSummaries")
+                        .HasForeignKey("PayrollRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PayrollRun");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.Payslip", b =>
+                {
+                    b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("Employee_Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ApiHrm.Domains.Entities.PayrollRun", "PayrollRun")
+                        .WithMany("Payslips")
+                        .HasForeignKey("Payroll_Run_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("PayrollRun");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Applicant", b =>
@@ -422,21 +1233,33 @@ namespace api_hrm.Migrations
                 {
                     b.Navigation("Documents");
 
-                    b.Navigation("EmployeeHistories");
-
                     b.Navigation("Exits");
+                });
 
+            modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveType", b =>
+                {
                     b.Navigation("LeaveBalances");
                 });
 
-            modelBuilder.Entity("ApiHrm.Domains.Entities.LeaveCode", b =>
+            modelBuilder.Entity("ApiHrm.Domains.Entities.PayrollRun", b =>
                 {
-                    b.Navigation("LeaveBalances");
+                    b.Navigation("BonusIncentives");
+
+                    b.Navigation("EmployeePayrollRecords");
+
+                    b.Navigation("PayoutSummaries");
+
+                    b.Navigation("Payslips");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.Role", b =>
                 {
                     b.Navigation("Employees");
+                });
+
+            modelBuilder.Entity("ApiHrm.Domains.Entities.ShiftDefinition", b =>
+                {
+                    b.Navigation("EmployeeShifts");
                 });
 #pragma warning restore 612, 618
         }

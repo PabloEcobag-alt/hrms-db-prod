@@ -10,7 +10,7 @@ namespace ApiHrm.Domains.Entities
         [Key]
         public int Balance_ID { get; set; }
         public int Employee_ID { get; set; }
-        public int Leave_Code_ID { get; set; }
+        public int LeaveTypeId { get; set; }
         public int Allocated_Days { get; set; }
         public int Used_Days { get; set; }
         public int Pending_Days { get; set; }
@@ -19,7 +19,7 @@ namespace ApiHrm.Domains.Entities
         [ForeignKey("Employee_ID")]
         public virtual Employee Employee { get; set; }
 
-        [ForeignKey("Leave_Code_ID")]
-        public virtual LeaveCode LeaveCode { get; set; }
+        [ForeignKey("LeaveTypeId")]
+        public virtual LeaveType LeaveType { get; set; }
     }
 }

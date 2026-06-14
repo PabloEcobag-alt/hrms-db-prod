@@ -10,7 +10,8 @@ namespace Api.Contracts.Employee
         [EmailAddress(ErrorMessage = "Invalid email format")]
         public string? Email { get; set; }
         public string? Contact_Details { get; set; }
-        public string? Payment_Method { get; set; }
+        public string? PaymentMethod { get; set; }
+        public string? AccountNumber { get; set; }
         public string? Status { get; set; }
         public int? Role_Id { get; set; }
         public DateTime? Hire_Date { get; set; }

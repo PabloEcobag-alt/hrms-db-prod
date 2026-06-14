@@ -129,7 +129,7 @@ namespace Applications.Services
                 Position = role.Role_Description,
                 Role_ID = roleId,
                 Contact_Details = applicant.Contact_Details,
-                Payment_Method = applicant.Payment_Method,
+                PaymentMethod = applicant.Payment_Method,
                 Status = "Active",
                 Hire_Date = DateTime.UtcNow 
             };

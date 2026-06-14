@@ -8,11 +8,11 @@
       "applicationUrl": "http://localhost:5165",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "POSTGRES_DB_HOST": "127.0.0.1",
-        "POSTGRES_DB_PORT": "5434",
+        "POSTGRES_DB_HOST": "localhost",
+        "POSTGRES_DB_PORT": "5432",
         "POSTGRES_USERNAME": "postgres",
-        "POSTGRES_PASSWORD": "YOUR_DB_PASSWORD_HERE",
-        "JWT_SECRET_KEY": "YourFallbackSecretKeyForLocalDevelopmentHere123!"
+        "POSTGRES_PASSWORD": "postgres",
+        "JWT_SECRET_KEY": "9f3c2a7b6d4e8f1c0a5b9d3e7f6c2a1d8b4e7f0c9a6d3b5f1e8c2a7d9b0f4e6"
       }
     },
     "https": {
@@ -22,11 +22,11 @@
       "applicationUrl": "https://localhost:7212;http://localhost:5165",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "POSTGRES_DB_HOST": "127.0.0.1",
-        "POSTGRES_DB_PORT": "5434",
+        "POSTGRES_DB_HOST": "localhost",
+        "POSTGRES_DB_PORT": "5432",
         "POSTGRES_USERNAME": "postgres",
-        "POSTGRES_PASSWORD": "YOUR_DB_PASSWORD_HERE",
-        "JWT_SECRET_KEY": "YourFallbackSecretKeyForLocalDevelopmentHere123!"
+        "POSTGRES_PASSWORD": "postgres",
+        "JWT_SECRET_KEY": "9f3c2a7b6d4e8f1c0a5b9d3e7f6c2a1d8b4e7f0c9a6d3b5f1e8c2a7d9b0f4e6"
       }
     }
   }

@@ -12,7 +12,8 @@ namespace Api.Contracts.Employee
         public string Position { get; set; } = default!;
         public string Email { get; set; } = default!;
         public string Contact_Details { get; set; } = default!;
-        public string Payment_Method { get; set; } = default!;
+        public string PaymentMethod { get; set; } = default!;
+        public string? AccountNumber { get; set; }
         public string Status { get; set; } = default!;
         public DateTime Hire_Date { get; set; }
 

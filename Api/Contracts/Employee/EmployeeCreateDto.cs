@@ -21,7 +21,9 @@ namespace Api.Contracts.Employee
 
         public string? Contact_Details { get; set; }
 
-        public string? Payment_Method { get; set; }
+        public string PaymentMethod { get; set; } = "Bank";
+
+        public string? AccountNumber { get; set; }
 
         [Required]
         public string Status { get; set; } = "Active";

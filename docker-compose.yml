@@ -1,7 +1,3 @@
 include:
   - .docker/compose/infra.yml
   - .docker/compose/api.yml
-
-networks:
-  app-net:
-    driver: bridge

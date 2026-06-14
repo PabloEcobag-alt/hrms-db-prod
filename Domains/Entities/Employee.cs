@@ -18,7 +18,14 @@ namespace ApiHrm.Domains.Entities
         public DateTime Hire_Date { get; set; }
         public string Email { get; set; }
         public string Contact_Details { get; set; }
-        public string Payment_Method { get; set; }
+        public string PaymentMethod { get; set; } = "ATM";
+        public string? AccountNumber { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MonthlyBasePay { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DailyRate { get; set; }
         public int Role_ID { get; set; }
         public string Status { get; set; }
 

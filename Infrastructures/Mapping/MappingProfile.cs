@@ -5,6 +5,11 @@ using Api.Contracts.RoleExit;
 using Api.Contracts.Document;
 using Api.Contracts.Checklist;
 using Api.Contracts.Applicant;
+using Api.Contracts.Attendance;
+using Api.Contracts.Leave;
+using Api.Contracts.CashAdvance;
+using Api.Contracts.LeaveType;
+using Api.Contracts.Payroll;
 
 namespace ApiHrm.Infrastructures.Mapping
 {
@@ -42,6 +47,23 @@ namespace ApiHrm.Infrastructures.Mapping
 
             CreateMap<DocumentUploadDto, Document>();
             CreateMap<Document, DocumentReadDto>();
+
+            // Reference Data
+            CreateMap<LeaveType, LeaveTypeReadDto>();
+
+            // Sprint 2 — Attendance
+            CreateMap<AttendanceLog, AttendanceLogReadDto>();
+
+            // Sprint 2 — Leave
+            CreateMap<LeaveRequest, LeaveRequestReadDto>()
+                .ForMember(dest => dest.LeaveTypeLabel,
+                    opt => opt.MapFrom(src => src.LeaveType != null ? src.LeaveType.LeaveTypeName : string.Empty));
+
+            // Sprint 2 — Cash Advance
+            CreateMap<CashAdvance, CashAdvanceReadDto>();
+
+            // Sprint 3 — Payroll
+            CreateMap<EmployeePayrollRecord, PayrollRecordReadDto>();
 
         }
     }

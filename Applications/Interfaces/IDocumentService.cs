@@ -8,5 +8,6 @@ namespace Applications.Interfaces
         Task<IEnumerable<DocumentReadDto>> GetDocumentsByOwnerAsync(int ownerId, string ownerType);
         Task<IEnumerable<DocumentReadDto>> GetAllDocumentsAsync();
         Task<bool> DeleteDocumentAsync(int documentId);
+        Task<bool> VerifyDocumentAsync(int documentId, VerifyDocumentDto dto, string verifierUserId, string verifierRole, string ipAddress);
     }
 }
