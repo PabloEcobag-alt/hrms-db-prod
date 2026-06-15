@@ -4,10 +4,10 @@ namespace Applications.Interfaces
 {
     public interface IEmployeeService
     {
-        Task<IEnumerable<EmployeeReadDto>> GetAllEmployeesAsync();
-        Task<EmployeeDetailDto?> GetEmployeeByIdAsync(int id);
-        Task<EmployeeReadDto> CreateEmployeeAsync(EmployeeCreateDto createDto);
-        Task<bool> UpdateEmployeeAsync(int id, EmployeeUpdateDto updateDto);
+        Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync();
+        Task<EmployeeDto?> GetEmployeeByIdAsync(int id);
+        Task<EmployeeDto> CreateEmployeeAsync(EmployeeCreateDto createDto);
+        Task<bool> UpdateEmployeeProfileAsync(int id, EmployeeUpdateDto updateDto);
         Task<bool> DeleteEmployeeAsync(int id);
     }
 }

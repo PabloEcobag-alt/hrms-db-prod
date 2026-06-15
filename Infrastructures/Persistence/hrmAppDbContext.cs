@@ -45,6 +45,12 @@ namespace ApiHrm.Infrastructures.Persistence
         public DbSet<EmployeeDocument> EmployeeDocuments { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        // Sprint 4 - Employee Information
+        public DbSet<EmergencyContact> EmergencyContacts { get; set; }
+        public DbSet<GovernmentId> GovernmentIds { get; set; }
+        public DbSet<CompanyProperty> CompanyProperties { get; set; }
+        public DbSet<DocumentStatus> DocumentStatuses { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -199,6 +205,36 @@ namespace ApiHrm.Infrastructures.Persistence
                 .ToTable(t => t.HasCheckConstraint(
                     "CK_Employee_Document_Expiry_After_Issue",
                     "\"Expiry_Date\" > \"Issue_Date\""));
+
+            // ===== Sprint 4 - Employee Information =====
+
+            // EmergencyContact -> Employee (one-to-one)
+            modelBuilder.Entity<EmergencyContact>()
+                .HasOne(e => e.Employee)
+                .WithOne(e => e.EmergencyContact)
+                .HasForeignKey<EmergencyContact>(e => e.Employee_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // GovernmentId -> Employee (one-to-one)
+            modelBuilder.Entity<GovernmentId>()
+                .HasOne(g => g.Employee)
+                .WithOne(e => e.GovernmentId)
+                .HasForeignKey<GovernmentId>(g => g.Employee_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CompanyProperty -> Employee (one-to-one)
+            modelBuilder.Entity<CompanyProperty>()
+                .HasOne(c => c.Employee)
+                .WithOne(e => e.CompanyProperty)
+                .HasForeignKey<CompanyProperty>(c => c.Employee_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // DocumentStatus -> Employee (one-to-many)
+            modelBuilder.Entity<DocumentStatus>()
+                .HasOne(d => d.Employee)
+                .WithMany(e => e.DocumentStatuses)
+                .HasForeignKey(d => d.Employee_Id)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

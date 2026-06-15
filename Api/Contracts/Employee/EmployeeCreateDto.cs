@@ -6,31 +6,49 @@ namespace Api.Contracts.Employee
     {
         [Required(ErrorMessage = "First name is required")]
         [StringLength(50)]
-        public string First_Name { get; set; } = default!;
+        public string firstName { get; set; } = default!;
 
         [Required(ErrorMessage = "Last name is required")]
         [StringLength(50)]
-        public string Last_Name { get; set; } = default!;
+        public string lastName { get; set; } = default!;
 
         [Required]
-        public string Position { get; set; } = default!;
+        public string position { get; set; } = default!;
+
+        public string department { get; set; } = default!;
 
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email format")]
-        public string Email { get; set; } = default!;
+        public string email { get; set; } = default!;
 
-        public string? Contact_Details { get; set; }
+        public string phone { get; set; } = default!;
 
-        public string PaymentMethod { get; set; } = "Bank";
+        public string address { get; set; } = default!;
 
-        public string? AccountNumber { get; set; }
+        public string dateOfBirth { get; set; } = default!; // ISO format: YYYY-MM-DD
+
+        public string gender { get; set; } = default!;
+
+        public string civilStatus { get; set; } = default!;
+
+        public string bloodType { get; set; } = default!;
+
+        public EmergencyContactDto emergencyContact { get; set; } = default!;
+
+        public GovernmentIdsDto governmentIds { get; set; } = default!;
+
+        public CompanyPropertyDto companyProperty { get; set; } = default!;
+
+        public string paymentMethod { get; set; } = "Bank";
+
+        public string? accountNumber { get; set; }
 
         [Required]
-        public string Status { get; set; } = "Active";
+        public string status { get; set; } = "Active";
 
         [Required(ErrorMessage = "A role must be assigned")]
-        public int Role_Id { get; set; }
+        public int roleId { get; set; }
 
-        public DateTime Hire_Date { get; set; } = DateTime.UtcNow;
+        public string hireDate { get; set; } = default!; // ISO format: YYYY-MM-DD
     }
 }

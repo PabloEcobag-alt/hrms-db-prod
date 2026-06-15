@@ -4,16 +4,25 @@ namespace Api.Contracts.Employee
 {
     public class EmployeeUpdateDto
     {
-        public string? First_Name { get; set; }
-        public string? Last_Name { get; set; }
-        public string? Position { get; set; }
+        public string? firstName { get; set; }
+        public string? lastName { get; set; }
+        public string? position { get; set; }
+        public string? department { get; set; }
         [EmailAddress(ErrorMessage = "Invalid email format")]
-        public string? Email { get; set; }
-        public string? Contact_Details { get; set; }
-        public string? PaymentMethod { get; set; }
-        public string? AccountNumber { get; set; }
-        public string? Status { get; set; }
-        public int? Role_Id { get; set; }
-        public DateTime? Hire_Date { get; set; }
+        public string? email { get; set; }
+        public string? phone { get; set; }
+        public string? address { get; set; }
+        public string? dateOfBirth { get; set; } // ISO format: YYYY-MM-DD
+        public string? gender { get; set; }
+        public string? civilStatus { get; set; }
+        public string? bloodType { get; set; }
+        public EmergencyContactDto? emergencyContact { get; set; }
+        public GovernmentIdsDto? governmentIds { get; set; }
+        public CompanyPropertyDto? companyProperty { get; set; }
+        public string? paymentMethod { get; set; }
+        public string? accountNumber { get; set; }
+        public string? status { get; set; }
+        public int? roleId { get; set; }
+        public string? hireDate { get; set; } // ISO format: YYYY-MM-DD
     }
 }

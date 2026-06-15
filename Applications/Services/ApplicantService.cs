@@ -76,7 +76,7 @@ namespace Applications.Services
         {
             var applicant = _mapper.Map<Applicant>(createDto);
 
-            applicant.Application_Date = DateTime.UtcNow;
+            applicant.Application_Date = DateOnly.FromDateTime(DateTime.UtcNow);
             
             if (applicant.Checklists == null)
                 {
@@ -131,7 +131,7 @@ namespace Applications.Services
                 Contact_Details = applicant.Contact_Details,
                 PaymentMethod = applicant.Payment_Method,
                 Status = "Active",
-                Hire_Date = DateTime.UtcNow 
+                Hire_Date = DateOnly.FromDateTime(DateTime.UtcNow)
             };
 
             _context.Employees.Add(newEmployee);

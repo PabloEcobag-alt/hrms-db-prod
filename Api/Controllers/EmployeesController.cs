@@ -19,14 +19,14 @@ namespace ApiHrm.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EmployeeReadDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetAll()
         {
             var employees = await _employeeService.GetAllEmployeesAsync();
             return Ok(employees);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<EmployeeDetailDto>> GetById([FromRoute]int id)
+        public async Task<ActionResult<EmployeeDto>> GetById([FromRoute]int id)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(id);
             if (employee == null) return NotFound();
@@ -36,17 +36,17 @@ namespace ApiHrm.Controllers
 
         [HttpPost]
         [Authorize(Roles = "HR,HRAdmin")]
-        public async Task<ActionResult<EmployeeReadDto>> Create(EmployeeCreateDto createDto)
+        public async Task<ActionResult<EmployeeDto>> Create(EmployeeCreateDto createDto)
         {
             var result = await _employeeService.CreateEmployeeAsync(createDto);
-            return CreatedAtAction(nameof(GetById), new { id = result.Employee_Id }, result);
+            return CreatedAtAction(nameof(GetById), new { id = result.id }, result);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "HR,HRAdmin")]
         public async Task<ActionResult> Update(int id, EmployeeUpdateDto updateDto)
         {
-            var success = await _employeeService.UpdateEmployeeAsync(id, updateDto);
+            var success = await _employeeService.UpdateEmployeeProfileAsync(id, updateDto);
             if (!success) return NotFound();
             return NoContent();
         }
