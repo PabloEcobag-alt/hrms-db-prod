@@ -9,43 +9,51 @@ namespace ApiHrm.Domains.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Employee_Id { get; set; }
+        public int EmployeeId { get; set; }
+
         [Required]
         [StringLength(100)]
-        public string First_Name { get; set; }
-        public string Last_Name { get; set; }
-        public string Position { get; set; }
-        public string Department { get; set; }
-        public DateOnly Hire_Date { get; set; }
-        public string Email { get; set; }
-        public string Contact_Details { get; set; }
-        public string PaymentMethod { get; set; } = "ATM";
-        public string? AccountNumber { get; set; }
+        public string ErpUserId { get; set; } // FK to ms-authentication service
 
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal MonthlyBasePay { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string FirstName { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal DailyRate { get; set; }
-        public int Role_ID { get; set; }
-        public string Status { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string LastName { get; set; }
 
-        // Personal Information
-        public int AvatarIndex { get; set; }
-        public string Address { get; set; }
+        [StringLength(100)]
+        public string? MiddleName { get; set; }
+
+        [Required]
         public DateOnly DateOfBirth { get; set; }
-        public string Gender { get; set; } // Expected: "Male" | "Female" | etc.
-        public string CivilStatus { get; set; } // Expected: "Single" | "Married" | etc.
-        public string BloodType { get; set; } // Expected: "A+" | "B+" | "O+" | etc.
-        public string ErpUserId { get; set; } // Link to identity server (GUID)
 
+        [Required]
+        [StringLength(20)]
+        public string Gender { get; set; } // Male, Female, Other
+
+        [Required]
+        [StringLength(20)]
+        public string CivilStatus { get; set; } // Single, Married, Divorced, Widowed
+
+        // Legacy fields maintained for compatibility
+        public int AvatarIndex { get; set; }
+        public string BloodType { get; set; } = "";
+        public int Role_ID { get; set; }
+        public string Status { get; set; } = "";
+
+        // Navigation Properties
+        public virtual EmploymentDetails EmploymentDetails { get; set; }
+        public virtual ContactInformation ContactInformation { get; set; }
+        public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; }
+        public virtual ICollection<EmployeeDocument> EmployeeDocuments { get; set; }
+        
+        // Legacy navigation properties maintained for compatibility
         [ForeignKey("Role_ID")]
         public virtual Role role { get; set; }
         public ICollection<Exit> Exits { get; set; }
         public ICollection<Document> Documents { get; set; }
-
-        // Navigation properties for new entities
-        public virtual EmergencyContact EmergencyContact { get; set; }
         public virtual GovernmentId GovernmentId { get; set; }
         public virtual CompanyProperty CompanyProperty { get; set; }
         public virtual ICollection<DocumentStatus> DocumentStatuses { get; set; }

@@ -1,0 +1,19 @@
+namespace Api.Contracts.Digital201
+{
+    public class GetContactInfoResponseDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public EmergencyContactDto EmergencyContact { get; set; } = new();
+    }
+
+    public class EmergencyContactDto
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Relationship { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+    }
+}

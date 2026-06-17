@@ -26,11 +26,11 @@ namespace ApiHrm.Infrastructures.Mapping
             CreateMap<DocumentCreateDto, Document>();
             CreateMap<Employee, EmployeeReadDto>()
                 .MaxDepth(3)
-                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.First_Name} {src.Last_Name}"))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.role.Role_Description));
 
             CreateMap<EmployeeCreateDto, Employee>()
-                .ForMember(dest => dest.Employee_Id, opt => opt.Ignore());
+                .ForMember(dest => dest.EmployeeId, opt => opt.Ignore());
 
             CreateMap<EmployeeUpdateDto, Employee>();
 
@@ -40,7 +40,7 @@ namespace ApiHrm.Infrastructures.Mapping
             CreateMap<ExitCreateDto, Exit>();
             CreateMap<Exit, ExitReadDto>()
                 .ForMember(dest => dest.EmployeeFullName, 
-                opt => opt.MapFrom(src => $"{src.Employee.First_Name} {src.Employee.Last_Name}"));
+                opt => opt.MapFrom(src => $"{src.Employee.FirstName} {src.Employee.LastName}"));
 
             CreateMap<ChecklistUpdateDto, Checklist>();
             CreateMap<Checklist, ChecklistReadDto>();

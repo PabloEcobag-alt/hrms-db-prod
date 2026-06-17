@@ -46,7 +46,7 @@ namespace Applications.Services
 
         public async Task<PayrollComputeResultDto> ComputeAsync(int employeeId, DateOnly cutoffDate)
         {
-            var employeeExists = await _context.Employees.AnyAsync(e => e.Employee_Id == employeeId);
+            var employeeExists = await _context.Employees.AnyAsync(e => e.EmployeeId == employeeId);
             if (!employeeExists)
                 throw new BusinessValidationException($"Employee with ID {employeeId} does not exist.");
 
@@ -154,7 +154,7 @@ namespace Applications.Services
                 throw new BusinessValidationException(
                     $"Payroll run {dto.Payroll_Run_Id} is already finalized and cannot be modified.");
 
-            var employeeExists = await _context.Employees.AnyAsync(e => e.Employee_Id == dto.Employee_Id);
+            var employeeExists = await _context.Employees.AnyAsync(e => e.EmployeeId == dto.Employee_Id);
             if (!employeeExists)
                 throw new BusinessValidationException($"Employee with ID {dto.Employee_Id} does not exist.");
 
@@ -255,8 +255,8 @@ namespace Applications.Services
                 {
                     Id = record.Id,
                     Employee_Id = record.Employee_Id,
-                    Employee_Name = $"{record.Employee.First_Name} {record.Employee.Last_Name}",
-                    Position = record.Employee.Position,
+                    Employee_Name = $"{record.Employee.FirstName} {record.Employee.LastName}",
+                    Position = record.Employee.EmploymentDetails?.Position ?? "N/A",
                     Basic_Pay = record.Basic_Pay,
                     OT_Pay = record.OT_Pay,
                     Sss_Deduction = record.Sss_Deduction,
@@ -266,7 +266,7 @@ namespace Applications.Services
                     Bonus = 0,
                     Net_Pay = record.Net_Pay,
                     Status = record.PayrollRun?.Status ?? "Unknown",
-                    Payout_Method = record.Employee.PaymentMethod
+                    Payout_Method = "Bank" // Default payment method
                 };
                 dtos.Add(dto);
             }

@@ -42,7 +42,7 @@ namespace Applications.Services
                 }
 
                 // Generate file path
-                var fileName = $"{employee.Employee_Id}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf";
+                var fileName = $"{employee.EmployeeId}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf";
                 var filePath = Path.Combine(directory, fileName);
 
                 // Create PDF document
@@ -56,13 +56,13 @@ namespace Applications.Services
                 document.GeneratePdf(filePath);
 
                 _logger.LogInformation("Payslip generated successfully for EmployeeId {EmployeeId} at {FilePath}", 
-                    employee.Employee_Id, filePath);
+                    employee.EmployeeId, filePath);
 
                 return filePath;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating payslip for EmployeeId {EmployeeId}", employee.Employee_Id);
+                _logger.LogError(ex, "Error generating payslip for EmployeeId {EmployeeId}", employee.EmployeeId);
                 return string.Empty;
             }
         }
@@ -172,16 +172,16 @@ namespace Applications.Services
                 });
 
                 table.Cell().Element(CellStyle).Text("Name:");
-                table.Cell().Element(CellStyle).Text($"{_employee.First_Name} {_employee.Last_Name}");
+                table.Cell().Element(CellStyle).Text($"{_employee.FirstName} {_employee.LastName}");
 
                 table.Cell().Element(CellStyle).Text("Employee ID:");
-                table.Cell().Element(CellStyle).Text(_employee.Employee_Id.ToString());
+                table.Cell().Element(CellStyle).Text(_employee.EmployeeId.ToString());
 
                 table.Cell().Element(CellStyle).Text("Position:");
-                table.Cell().Element(CellStyle).Text(_employee.Position ?? "N/A");
+                table.Cell().Element(CellStyle).Text(_employee.EmploymentDetails?.Position ?? "N/A");
 
                 table.Cell().Element(CellStyle).Text("Payment Method:");
-                table.Cell().Element(CellStyle).Text(_employee.PaymentMethod ?? "N/A");
+                table.Cell().Element(CellStyle).Text("Bank"); // Default payment method
             });
         }
 

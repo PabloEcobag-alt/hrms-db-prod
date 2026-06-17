@@ -123,15 +123,16 @@ namespace Applications.Services
 
             var newEmployee = new Employee
             {
-                First_Name = applicant.First_Name,
-                Last_Name = applicant.Last_Name,
-                Email = applicant.Email,
-                Position = role.Role_Description,
-                Role_ID = roleId,
-                Contact_Details = applicant.Contact_Details,
-                PaymentMethod = applicant.Payment_Method,
+                FirstName = applicant.First_Name,
+                LastName = applicant.Last_Name,
+                DateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25)), // Default value
+                Gender = "Not Specified", // Default value
+                CivilStatus = "Single", // Default value
+                BloodType = "O+", // Default value
                 Status = "Active",
-                Hire_Date = DateOnly.FromDateTime(DateTime.UtcNow)
+                Role_ID = roleId,
+                AvatarIndex = 0,
+                ErpUserId = Guid.NewGuid().ToString() // Will be updated by authentication service
             };
 
             _context.Employees.Add(newEmployee);
@@ -143,7 +144,7 @@ namespace Applications.Services
 
             var result = await _context.Employees
             .Include(e => e.role)
-            .FirstOrDefaultAsync(e => e.Employee_Id == newEmployee.Employee_Id);
+            .FirstOrDefaultAsync(e => e.EmployeeId == newEmployee.EmployeeId);
 
             return _mapper.Map<EmployeeReadDto>(newEmployee);
         }

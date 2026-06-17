@@ -31,7 +31,7 @@ namespace Applications.Services
 
         public async Task<LeaveRequestReadDto> CreateAsync(LeaveRequestCreateDto dto)
         {
-            var employeeExists = await _context.Employees.AnyAsync(e => e.Employee_Id == dto.Employee_Id);
+            var employeeExists = await _context.Employees.AnyAsync(e => e.EmployeeId == dto.Employee_Id);
             if (!employeeExists)
                 throw new BusinessValidationException($"Employee with ID {dto.Employee_Id} does not exist.");
 

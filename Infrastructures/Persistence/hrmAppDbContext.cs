@@ -51,6 +51,10 @@ namespace ApiHrm.Infrastructures.Persistence
         public DbSet<CompanyProperty> CompanyProperties { get; set; }
         public DbSet<DocumentStatus> DocumentStatuses { get; set; }
 
+        // Digital 201 Schema Refactoring - New Entities
+        public DbSet<EmploymentDetails> EmploymentDetails { get; set; }
+        public DbSet<ContactInformation> ContactInformation { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -197,7 +201,7 @@ namespace ApiHrm.Infrastructures.Persistence
             modelBuilder.Entity<EmployeeDocument>()
                 .HasOne(d => d.Employee)
                 .WithMany()
-                .HasForeignKey(d => d.Employee_Id)
+                .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Employee Document: expiry_date > issue_date constraint
@@ -208,11 +212,11 @@ namespace ApiHrm.Infrastructures.Persistence
 
             // ===== Sprint 4 - Employee Information =====
 
-            // EmergencyContact -> Employee (one-to-one)
+            // EmergencyContact -> Employee (one-to-many) - REFACTORED
             modelBuilder.Entity<EmergencyContact>()
                 .HasOne(e => e.Employee)
-                .WithOne(e => e.EmergencyContact)
-                .HasForeignKey<EmergencyContact>(e => e.Employee_Id)
+                .WithMany(e => e.EmergencyContacts)
+                .HasForeignKey(e => e.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // GovernmentId -> Employee (one-to-one)
@@ -234,6 +238,34 @@ namespace ApiHrm.Infrastructures.Persistence
                 .HasOne(d => d.Employee)
                 .WithMany(e => e.DocumentStatuses)
                 .HasForeignKey(d => d.Employee_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ===== Digital 201 Schema Refactoring - New Entity Configurations =====
+
+            // EmploymentDetails -> Employee (one-to-one)
+            modelBuilder.Entity<EmploymentDetails>()
+                .HasOne(ed => ed.Employee)
+                .WithOne(e => e.EmploymentDetails)
+                .HasForeignKey<EmploymentDetails>(ed => ed.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // EmploymentDetails: BasePay precision constraint
+            modelBuilder.Entity<EmploymentDetails>()
+                .Property(ed => ed.BasePay)
+                .HasPrecision(18, 2);
+
+            // ContactInformation -> Employee (one-to-one)
+            modelBuilder.Entity<ContactInformation>()
+                .HasOne(ci => ci.Employee)
+                .WithOne(e => e.ContactInformation)
+                .HasForeignKey<ContactInformation>(ci => ci.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // EmployeeDocument -> Employee (one-to-many) - REFACTORED
+            modelBuilder.Entity<EmployeeDocument>()
+                .HasOne(ed => ed.Employee)
+                .WithMany(e => e.EmployeeDocuments)
+                .HasForeignKey(ed => ed.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
         }

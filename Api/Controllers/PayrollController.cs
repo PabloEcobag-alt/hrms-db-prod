@@ -159,12 +159,12 @@ namespace ApiHrm.Controllers
                 // Compute payroll for each employee
                 foreach (var employee in activeEmployees)
                 {
-                    var computationResult = await _payrollComputationService.ComputePayrollAsync(dto.Payroll_Run_Id, employee.Employee_Id);
+                    var computationResult = await _payrollComputationService.ComputePayrollAsync(dto.Payroll_Run_Id, employee.EmployeeId);
 
                     var payrollRecord = new EmployeePayrollRecord
                     {
                         Payroll_Run_Id = dto.Payroll_Run_Id,
-                        Employee_Id = employee.Employee_Id,
+                        Employee_Id = employee.EmployeeId,
                         Basic_Pay = computationResult.Basic_Pay,
                         OT_Pay = computationResult.OT_Pay,
                         Sss_Deduction = computationResult.Sss_Deduction,
@@ -193,10 +193,10 @@ namespace ApiHrm.Controllers
                             var payslip = new Payslip
                             {
                                 Payroll_Run_Id = dto.Payroll_Run_Id,
-                                Employee_Id = employee.Employee_Id,
+                                Employee_Id = employee.EmployeeId,
                                 Payout_Date = DateOnly.FromDateTime(DateTime.UtcNow),
                                 Pdf_Url = pdfPath,
-                                Download_Url = $"/api/payroll/payslip/download/{dto.Payroll_Run_Id}/{employee.Employee_Id}",
+                                Download_Url = $"/api/payroll/payslip/download/{dto.Payroll_Run_Id}/{employee.EmployeeId}",
                                 Email_Sent_At = null,
                                 Email_Retry_Count = 0
                             };
@@ -205,12 +205,12 @@ namespace ApiHrm.Controllers
                         }
                         else
                         {
-                            _logger.LogWarning("Failed to generate payslip for EmployeeId {EmployeeId}", employee.Employee_Id);
+                            _logger.LogWarning("Failed to generate payslip for EmployeeId {EmployeeId}", employee.EmployeeId);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error generating payslip for EmployeeId {EmployeeId}", employee.Employee_Id);
+                        _logger.LogError(ex, "Error generating payslip for EmployeeId {EmployeeId}", employee.EmployeeId);
                         // Continue to next employee (fault tolerance)
                     }
                 }
@@ -220,7 +220,7 @@ namespace ApiHrm.Controllers
 
                 // Group by PaymentMethod and generate PayoutSummary
                 var payoutSummaries = payrollRecords
-                    .GroupBy(pr => activeEmployees.First(e => e.Employee_Id == pr.Employee_Id).PaymentMethod)
+                    .GroupBy(pr => "Bank") // Default payment method since PaymentMethod was moved
                     .Select(g => new PayoutSummary
                     {
                         PayrollRunId = dto.Payroll_Run_Id,
@@ -283,8 +283,8 @@ namespace ApiHrm.Controllers
                 {
                     Id = epr.Id,
                     Employee_Id = epr.Employee_Id,
-                    Employee_Name = $"{epr.Employee.First_Name} {epr.Employee.Last_Name}",
-                    Position = epr.Employee.Position,
+                    Employee_Name = $"{epr.Employee.FirstName} {epr.Employee.LastName}",
+                    Position = epr.Employee.EmploymentDetails?.Position ?? "N/A",
                     Basic_Pay = epr.Basic_Pay,
                     OT_Pay = epr.OT_Pay,
                     Sss_Deduction = epr.Sss_Deduction,
@@ -294,7 +294,7 @@ namespace ApiHrm.Controllers
                     Bonus = 0, // TODO: Calculate from BonusIncentive
                     Net_Pay = epr.Net_Pay,
                     Status = pr.Status,
-                    Payout_Method = epr.Employee.PaymentMethod
+                    Payout_Method = "Bank" // Default payment method
                 }));
 
                 return Ok(result);

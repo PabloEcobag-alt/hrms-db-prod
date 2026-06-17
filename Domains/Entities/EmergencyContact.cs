@@ -8,24 +8,32 @@ namespace ApiHrm.Domains.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int EmergencyContactId { get; set; }
 
         [Required]
-        public int Employee_Id { get; set; }
+        public int EmployeeId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string Name { get; set; }
+        public string FirstName { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string LastName { get; set; }
 
         [Required]
         [StringLength(50)]
-        public string Relationship { get; set; }
+        public string Relationship { get; set; } // Spouse, Parent, Sibling, Friend, etc.
 
         [Required]
         [StringLength(20)]
-        public string Phone { get; set; }
+        public string PhoneNumber { get; set; }
 
-        [ForeignKey("Employee_Id")]
+        [StringLength(500)]
+        public string? Address { get; set; }
+
+        // Navigation Property
+        [ForeignKey("EmployeeId")]
         public virtual Employee Employee { get; set; }
     }
 }

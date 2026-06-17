@@ -98,7 +98,7 @@ namespace Applications.Services
             // Wait, does the audit log table have a detail/description field or is it recorded in Record_Label/Action?
             // Yes! Record_Label in AuditLog is string, we can set it to exactly:
             // "HR Admin [UserId] verified/rejected Document [Id] for Employee [EmpId]"
-            var auditMsg = $"HR Admin {verifierUserId} {actionText} Document {documentId} for Employee {doc.Employee_Id}";
+            var auditMsg = $"HR Admin {verifierUserId} {actionText} Document {documentId} for Employee {doc.EmployeeId}";
             
             // Let's log it under action or recordLabel:
             await _auditLogService.LogAsync(

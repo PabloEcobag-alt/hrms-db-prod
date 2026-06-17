@@ -30,8 +30,10 @@ namespace Applications.Services
                 throw new ArgumentException($"PayrollRun with ID {payrollRunId} not found.");
             }
 
-            // Step 2: Fetch Employee Data
-            var employee = await _context.Employees.FindAsync(employeeId);
+            // Step 2: Fetch Employee Data with EmploymentDetails
+            var employee = await _context.Employees
+                .Include(e => e.EmploymentDetails)
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
             if (employee == null)
             {
                 throw new ArgumentException($"Employee with ID {employeeId} not found.");
@@ -81,43 +83,45 @@ namespace Applications.Services
             }
 
             // Step 5: Compute Basic Pay
-            var basicPay = employee.DailyRate * daysWorked;
+            var dailyRate = employee.EmploymentDetails?.BasePay / 22m ?? 0m; // Approximate daily rate from monthly base pay
+            var basicPay = dailyRate * daysWorked;
 
             // Step 6: Compute OT Pay (using Hourly Rate)
-            var hourlyRate = employee.DailyRate / standardHours;
+            var hourlyRate = dailyRate / standardHours;
             var otPay = otHours * hourlyRate * OT_MULTIPLIER;
 
             // Step 7: Compute Gross Pay
             var grossPay = basicPay + otPay;
 
             // Step 8: Compute Statutory Deductions (using MonthlyBasePay for bracket lookup)
+            var monthlyBasePay = employee.EmploymentDetails?.BasePay ?? 0m;
             var sssBracket = _context.SssBrackets
                 .Where(b => b.EffectiveYear == 2024)
                 .OrderByDescending(b => b.SalaryRangeStart)
-                .FirstOrDefault(b => employee.MonthlyBasePay >= b.SalaryRangeStart);
+                .FirstOrDefault(b => monthlyBasePay >= b.SalaryRangeStart);
 
             // SSS: Use only employee share (EmployeeShareRate is the employee's percentage)
             var sssDeduction = sssBracket != null 
-                ? (employee.MonthlyBasePay * sssBracket.EmployeeShareRate) / 2m 
+                ? (monthlyBasePay * sssBracket.EmployeeShareRate) / 2m 
                 : 0m;
 
             var philHealthBracket = _context.PhilHealthBrackets
                 .Where(b => b.EffectiveYear == 2024)
                 .OrderByDescending(b => b.SalaryRangeStart)
-                .FirstOrDefault(b => employee.MonthlyBasePay >= b.SalaryRangeStart);
+                .FirstOrDefault(b => monthlyBasePay >= b.SalaryRangeStart);
 
             // PhilHealth: Use only employee share (2.5% of basic pay, EmployeeShareRate = 0.025)
             var philHealthDeduction = philHealthBracket != null 
-                ? (employee.MonthlyBasePay * philHealthBracket.EmployeeShareRate) / 2m 
+                ? (monthlyBasePay * philHealthBracket.EmployeeShareRate) / 2m 
                 : 0m;
 
             var pagIbigBracket = _context.PagIbigBrackets
                 .Where(b => b.EffectiveYear == 2024)
                 .OrderByDescending(b => b.SalaryRangeStart)
-                .FirstOrDefault(b => employee.MonthlyBasePay >= b.SalaryRangeStart);
+                .FirstOrDefault(b => monthlyBasePay >= b.SalaryRangeStart);
 
             var pagIbigDeduction = pagIbigBracket != null 
-                ? (employee.MonthlyBasePay * pagIbigBracket.EmployeeShareRate) / 2m 
+                ? (monthlyBasePay * pagIbigBracket.EmployeeShareRate) / 2m 
                 : 0m;
 
             // Step 9: Compute Taxable Income and Tax
@@ -153,7 +157,7 @@ namespace Applications.Services
                 Employee_Id = employeeId,
                 Cutoff_Date = payrollRun.CutOff_End_Date,
                 Payroll_Run_Id = payrollRunId,
-                Daily_Rate = employee.DailyRate,
+                Daily_Rate = dailyRate,
                 Days_Worked = (int)daysWorked,
                 Basic_Pay = basicPay,
                 OT_Hours = otHours,

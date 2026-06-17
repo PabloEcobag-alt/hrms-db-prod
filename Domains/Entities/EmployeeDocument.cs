@@ -7,31 +7,39 @@ namespace ApiHrm.Domains.Entities
     public class EmployeeDocument
     {
         [Key]
-        [Column("employee_document_id")]
-        public int Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int DocumentId { get; set; }
 
         [Required]
-        public int Employee_Id { get; set; }
-
-        public string Document_Type { get; set; }
+        public int EmployeeId { get; set; }
 
         [Required]
-        public DateOnly Issue_Date { get; set; }
+        [StringLength(255)]
+        public string DocumentName { get; set; }
 
         [Required]
-        public DateOnly Expiry_Date { get; set; }
+        [StringLength(100)]
+        public string DocumentType { get; set; } // Contract, ID, Certificate, etc.
 
-        public string File_Url { get; set; }
+        [Required]
+        [StringLength(1000)]
+        public string FileUrl { get; set; }
 
-        public string Status { get; set; }
+        [Required]
+        public DateTime UploadDate { get; set; } = DateTime.UtcNow;
 
+        // Additional existing fields (retained for compatibility)
+        public string? Status { get; set; }
         public string VerificationStatus { get; set; } = "Pending_Verification";
-
         public int? VerifiedByUserId { get; set; }
-
         public string? RejectionReason { get; set; }
 
-        [ForeignKey("Employee_Id")]
+        // Legacy fields maintained for compatibility
+        public DateOnly Issue_Date { get; set; }
+        public DateOnly Expiry_Date { get; set; }
+
+        // Navigation Property
+        [ForeignKey("EmployeeId")]
         public virtual Employee Employee { get; set; }
     }
 }

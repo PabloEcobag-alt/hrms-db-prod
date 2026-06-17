@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Applications.Services;
-using ApiHrm.Infrastructures.Mapping;
+using ApiHrm.Infrastructures.Mapping; // Temporarily re-enabled for migration
 using Applications.Interfaces;
 using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Infrastructures.Persistence.Seeders;
-using AutoMapper;
+using AutoMapper; // Temporarily re-enabled for migration
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -21,7 +21,7 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(typeof(MappingProfile)); // Temporarily re-enabled for migration
 builder.Services.AddHttpContextAccessor();
 
 // Configure CompanySettings
@@ -107,6 +107,7 @@ builder.Services.AddScoped<ICashAdvanceService, CashAdvanceService>();
 builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IPayrollComputationService, PayrollComputationService>();
 builder.Services.AddScoped<IPayslipGeneratorService, PayslipGeneratorService>();
+builder.Services.AddScoped<IDigital201Service, Digital201Service>();
 
 
 var app = builder.Build();
