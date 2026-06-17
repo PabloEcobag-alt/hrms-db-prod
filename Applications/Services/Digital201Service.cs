@@ -5,6 +5,7 @@ using Api.Contracts.Digital201;
 using Applications.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace Applications.Services
 {
@@ -21,21 +22,29 @@ namespace Applications.Services
 
         public async Task<int> CreateEmployeeAsync(CreateEmployeeDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Check for duplicate employee with same first and last name
+            var existingEmployee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.FirstName.ToLower() == dto.FirstName.ToLower() && 
+                                         e.LastName.ToLower() == dto.LastName.ToLower());
             
+            if (existingEmployee != null)
+            {
+                throw new BadHttpRequestException("An employee with this exact first and last name already exists.");
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
-                // Generate ErpUserId for now (until Auth integration)
-                var erpUserId = Guid.NewGuid().ToString();
-                
                 // Step 1: Create Employee Record
+                // ErpUserId is left null - will be assigned by Auth service during registration
                 var employee = new Employee
                 {
-                    ErpUserId = erpUserId,
+                    ErpUserId = null,
                     FirstName = dto.FirstName,
                     MiddleName = dto.MiddleName,
                     LastName = dto.LastName,
-                    DateOfBirth = DateOnly.FromDateTime(DateTime.Now.AddYears(-25)), // Default value
+                    DateOfBirth = dto.DateOfBirth.HasValue ? DateOnly.FromDateTime(dto.DateOfBirth.Value) : DateOnly.FromDateTime(DateTime.Now.AddYears(-25)),
                     Gender = "Not Specified",
                     CivilStatus = "Not Specified",
                     Status = "Regular", // Default status
@@ -94,7 +103,24 @@ namespace Applications.Services
                     await _context.SaveChangesAsync();
                 }
 
-                // Step 5: Handle Document Uploads
+                // Step 5: Create Government ID if any government IDs are provided
+                if (!string.IsNullOrEmpty(dto.SSS) || !string.IsNullOrEmpty(dto.PhilHealth) || 
+                    !string.IsNullOrEmpty(dto.PagIbig) || !string.IsNullOrEmpty(dto.TIN))
+                {
+                    var governmentId = new GovernmentId
+                    {
+                        Employee_Id = employeeId,
+                        SSS_Number = dto.SSS ?? "",
+                        PhilHealth_Number = dto.PhilHealth ?? "",
+                        HDMF_Number = dto.PagIbig ?? "",
+                        TIN_Number = dto.TIN ?? ""
+                    };
+
+                    _context.GovernmentIds.Add(governmentId);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Step 6: Handle Document Uploads
                 await ProcessDocumentUploads(employeeId, dto);
 
                 await transaction.CommitAsync();
@@ -230,6 +256,20 @@ namespace Applications.Services
         {
             try
             {
+                _logger.LogInformation("Looking up employee for ErpUserId: {ErpUserId}", erpUserId);
+                
+                // Log all employees with their ErpUserIds for debugging
+                var allEmployees = await _context.Employees
+                    .Select(e => new { e.EmployeeId, e.FirstName, e.LastName, e.ErpUserId })
+                    .ToListAsync();
+                
+                _logger.LogInformation("Found {Count} employees in database", allEmployees.Count);
+                foreach (var emp in allEmployees.Take(5))
+                {
+                    _logger.LogInformation("Employee: {EmployeeId} - {FirstName} {LastName}, ErpUserId: {ErpUserId}", 
+                        emp.EmployeeId, emp.FirstName, emp.LastName, emp.ErpUserId ?? "NULL");
+                }
+
                 var employee = await _context.Employees
                     .Include(e => e.ContactInformation)
                     .Include(e => e.EmergencyContacts)
@@ -333,6 +373,424 @@ namespace Applications.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating contact info for ErpUserId: {ErpUserId}", erpUserId);
+                return false;
+            }
+        }
+
+        public async Task<bool> CheckDuplicateEmployeeAsync(string firstName, string lastName)
+        {
+            var existingEmployee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.FirstName.ToLower() == firstName.ToLower() && 
+                                         e.LastName.ToLower() == lastName.ToLower());
+            
+            return existingEmployee != null;
+        }
+
+        public async Task<List<ExpiringDocumentDto>> GetExpiringDocumentsAsync(int days)
+        {
+            var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(days));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            
+            var expiringDocuments = await _context.EmployeeDocuments
+                .Where(ed => ed.Expiry_Date <= cutoffDate && ed.Expiry_Date > today)
+                .Select(ed => new ExpiringDocumentDto
+                {
+                    EmployeeId = ed.EmployeeId,
+                    EmployeeName = ed.Employee.FirstName + " " + ed.Employee.LastName,
+                    DocumentType = ed.DocumentType,
+                    DocumentName = ed.DocumentName,
+                    ExpirationDate = ed.Expiry_Date.ToDateTime(TimeOnly.MinValue),
+                    DaysUntilExpiration = ed.Expiry_Date.DayNumber - today.DayNumber
+                })
+                .OrderBy(ed => ed.ExpirationDate)
+                .ToListAsync();
+
+            return expiringDocuments;
+        }
+
+        public async Task<EmployeeProfileDto?> GetEmployeeProfileAsync(int employeeId)
+        {
+            var employee = await _context.Employees
+                .Include(e => e.EmploymentDetails)
+                .Include(e => e.ContactInformation)
+                .Include(e => e.GovernmentId)
+                .Include(e => e.EmergencyContacts)
+                .Include(e => e.CompanyProperty)
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+            if (employee == null)
+                return null;
+
+            // Initialize missing entities to prevent null reference exceptions
+            if (employee.EmploymentDetails == null)
+                employee.EmploymentDetails = new EmploymentDetails();
+
+            if (employee.ContactInformation == null)
+                employee.ContactInformation = new ContactInformation();
+
+            if (employee.GovernmentId == null)
+                employee.GovernmentId = new GovernmentId();
+
+            return new EmployeeProfileDto
+            {
+                EmployeeId = employee.EmployeeId,
+                ErpUserId = employee.ErpUserId,
+                FirstName = employee.FirstName,
+                MiddleName = employee.MiddleName ?? "",
+                LastName = employee.LastName,
+                Position = employee.EmploymentDetails?.Position ?? "",
+                Department = employee.EmploymentDetails?.Department ?? "",
+                Status = employee.Status,
+                Email = employee.ContactInformation?.EmailAddress ?? "",
+                PhoneNumber = employee.ContactInformation?.PhoneNumber ?? "",
+                DateOfBirth = employee.DateOfBirth.ToString("yyyy-MM-dd"),
+                DateHired = employee.EmploymentDetails?.HireDate.ToString("yyyy-MM-dd") ?? "",
+                AssignedLocation = employee.EmploymentDetails?.Department ?? "",
+                Supervisor = "", // Not available in EmploymentDetails entity
+                EmergencyContactName = employee.EmergencyContacts?.FirstOrDefault()?.FirstName + " " + employee.EmergencyContacts?.FirstOrDefault()?.LastName ?? "",
+                EmergencyContactPhone = employee.EmergencyContacts?.FirstOrDefault()?.PhoneNumber ?? "",
+                EmergencyContactAddress = employee.ContactInformation?.PresentAddress ?? "",
+                EmergencyContactRelationship = employee.EmergencyContacts?.FirstOrDefault()?.Relationship ?? "",
+                SSS = employee.GovernmentId?.SSS_Number ?? "",
+                PhilHealth = employee.GovernmentId?.PhilHealth_Number ?? "",
+                PagIbig = employee.GovernmentId?.HDMF_Number ?? "",
+                TIN = employee.GovernmentId?.TIN_Number ?? "",
+                NbiClearanceDate = employee.GovernmentId?.NbiClearanceDate?.ToString("yyyy-MM-dd") ?? "",
+                BarangayClearanceDate = employee.GovernmentId?.BarangayClearanceDate?.ToString("yyyy-MM-dd") ?? "",
+                BankDetails = "", // Not available in GovernmentId entity
+                UniformIssued = false, // Not available in GovernmentId entity
+                CompanyIdIssued = employee.CompanyProperty?.Id_Issue_Date != DateOnly.MinValue, // Not available in GovernmentId entity
+                CompanyIdNumber = employee.CompanyProperty?.Employee_Id_Code ?? "", // Not available in GovernmentId entity
+                EquipmentIssued = "", // Not available in GovernmentId entity
+                CheckedBy = "", // Not available in GovernmentId entity
+                CheckedDate = "", // Not available in GovernmentId entity
+                Remarks = "" // Not available in GovernmentId entity
+            };
+        }
+
+        public async Task<EmployeeProfileDto?> GetEmployeeByErpUserIdAsync(string erpUserId)
+        {
+            var employee = await _context.Employees
+                .Include(e => e.EmploymentDetails)
+                .Include(e => e.ContactInformation)
+                .Include(e => e.GovernmentId)
+                .Include(e => e.EmergencyContacts)
+                .Include(e => e.CompanyProperty)
+                .FirstOrDefaultAsync(e => e.ErpUserId == erpUserId);
+
+            if (employee == null)
+                return null;
+
+            // Initialize missing entities to prevent null reference exceptions
+            if (employee.EmploymentDetails == null)
+                employee.EmploymentDetails = new EmploymentDetails();
+
+            if (employee.ContactInformation == null)
+                employee.ContactInformation = new ContactInformation();
+
+            if (employee.GovernmentId == null)
+                employee.GovernmentId = new GovernmentId();
+
+            return new EmployeeProfileDto
+            {
+                EmployeeId = employee.EmployeeId,
+                ErpUserId = employee.ErpUserId,
+                FirstName = employee.FirstName,
+                MiddleName = employee.MiddleName ?? "",
+                LastName = employee.LastName,
+                Position = employee.EmploymentDetails?.Position ?? "",
+                Department = employee.EmploymentDetails?.Department ?? "",
+                Status = employee.Status,
+                Email = employee.ContactInformation?.EmailAddress ?? "",
+                PhoneNumber = employee.ContactInformation?.PhoneNumber ?? "",
+                DateOfBirth = employee.DateOfBirth.ToString("yyyy-MM-dd"),
+                DateHired = employee.EmploymentDetails?.HireDate.ToString("yyyy-MM-dd") ?? "",
+                AssignedLocation = employee.EmploymentDetails?.Department ?? "",
+                Supervisor = "", // Not available in EmploymentDetails entity
+                EmergencyContactName = employee.EmergencyContacts?.FirstOrDefault()?.FirstName + " " + employee.EmergencyContacts?.FirstOrDefault()?.LastName ?? "",
+                EmergencyContactPhone = employee.EmergencyContacts?.FirstOrDefault()?.PhoneNumber ?? "",
+                EmergencyContactAddress = employee.ContactInformation?.PresentAddress ?? "",
+                EmergencyContactRelationship = employee.EmergencyContacts?.FirstOrDefault()?.Relationship ?? "",
+                SSS = employee.GovernmentId?.SSS_Number ?? "",
+                PhilHealth = employee.GovernmentId?.PhilHealth_Number ?? "",
+                PagIbig = employee.GovernmentId?.HDMF_Number ?? "",
+                TIN = employee.GovernmentId?.TIN_Number ?? "",
+                NbiClearanceDate = employee.GovernmentId?.NbiClearanceDate?.ToString("yyyy-MM-dd") ?? "",
+                BarangayClearanceDate = employee.GovernmentId?.BarangayClearanceDate?.ToString("yyyy-MM-dd") ?? "",
+                BankDetails = "", // Not available in GovernmentId entity
+                UniformIssued = false, // Not available in GovernmentId entity
+                CompanyIdIssued = employee.CompanyProperty?.Id_Issue_Date != DateOnly.MinValue, // Not available in GovernmentId entity
+                CompanyIdNumber = employee.CompanyProperty?.Employee_Id_Code ?? "", // Not available in GovernmentId entity
+                EquipmentIssued = "", // Not available in GovernmentId entity
+                CheckedBy = "", // Not available in GovernmentId entity
+                CheckedDate = "", // Not available in GovernmentId entity
+                Remarks = "" // Not available in GovernmentId entity
+            };
+        }
+
+        public async Task<bool> UpdateEmployeeAsync(int employeeId, UpdateEmployeeDto dto)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            
+            try
+            {
+                // Fetch existing employee with related entities
+                var employee = await _context.Employees
+                    .Include(e => e.EmploymentDetails)
+                    .Include(e => e.ContactInformation)
+                    .Include(e => e.GovernmentId)
+                    .Include(e => e.EmergencyContacts)
+                    .Include(e => e.CompanyProperty)
+                    .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+                if (employee == null)
+                    return false;
+
+                // Update basic employee information
+                if (!string.IsNullOrEmpty(dto.FirstName)) employee.FirstName = dto.FirstName;
+                if (!string.IsNullOrEmpty(dto.MiddleName)) employee.MiddleName = dto.MiddleName;
+                if (!string.IsNullOrEmpty(dto.LastName)) employee.LastName = dto.LastName;
+                if (!string.IsNullOrEmpty(dto.Status)) employee.Status = dto.Status;
+                if (!string.IsNullOrEmpty(dto.DateOfBirth) && DateOnly.TryParse(dto.DateOfBirth, out var dob))
+                    employee.DateOfBirth = dob;
+
+                // Update or create contact information
+                if (employee.ContactInformation == null)
+                {
+                    employee.ContactInformation = new ContactInformation();
+                    employee.ContactInformation.EmployeeId = employeeId;
+                }
+
+                if (!string.IsNullOrEmpty(dto.Email)) employee.ContactInformation.EmailAddress = dto.Email;
+                if (!string.IsNullOrEmpty(dto.PhoneNumber)) employee.ContactInformation.PhoneNumber = dto.PhoneNumber;
+                if (!string.IsNullOrEmpty(dto.EmergencyContactAddress)) employee.ContactInformation.PresentAddress = dto.EmergencyContactAddress;
+
+                // Update or create emergency contact
+                if (!string.IsNullOrEmpty(dto.EmergencyContactName))
+                {
+                    var existingEmergencyContact = employee.EmergencyContacts.FirstOrDefault();
+                    if (existingEmergencyContact == null)
+                    {
+                        // Create new emergency contact
+                        var emergencyContact = new EmergencyContact
+                        {
+                            EmployeeId = employeeId,
+                            FirstName = dto.EmergencyContactName.Split(' ').FirstOrDefault() ?? dto.EmergencyContactName,
+                            LastName = dto.EmergencyContactName.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                            PhoneNumber = dto.EmergencyContactPhone,
+                            Address = dto.EmergencyContactAddress ?? "Not specified",
+                            Relationship = dto.EmergencyContactRelationship ?? "Not specified"
+                        };
+                        _context.EmergencyContacts.Add(emergencyContact);
+                    }
+                    else
+                    {
+                        // Update existing emergency contact - only update fields if values are provided
+                        existingEmergencyContact.FirstName = dto.EmergencyContactName.Split(' ').FirstOrDefault() ?? dto.EmergencyContactName;
+                        existingEmergencyContact.LastName = dto.EmergencyContactName.Split(' ').Skip(1).FirstOrDefault() ?? "";
+                        if (!string.IsNullOrEmpty(dto.EmergencyContactPhone)) existingEmergencyContact.PhoneNumber = dto.EmergencyContactPhone;
+                        if (!string.IsNullOrEmpty(dto.EmergencyContactAddress)) existingEmergencyContact.Address = dto.EmergencyContactAddress;
+                        if (!string.IsNullOrEmpty(dto.EmergencyContactRelationship)) existingEmergencyContact.Relationship = dto.EmergencyContactRelationship;
+                    }
+                }
+
+                // Update or create employment details
+                if (employee.EmploymentDetails == null)
+                {
+                    employee.EmploymentDetails = new EmploymentDetails();
+                    employee.EmploymentDetails.EmployeeId = employeeId;
+                }
+
+                if (!string.IsNullOrEmpty(dto.Position)) employee.EmploymentDetails.Position = dto.Position;
+                if (!string.IsNullOrEmpty(dto.Department)) employee.EmploymentDetails.Department = dto.Department;
+                if (!string.IsNullOrEmpty(dto.AssignedLocation)) employee.EmploymentDetails.Department = dto.AssignedLocation;
+                if (!string.IsNullOrEmpty(dto.DateHired) && DateOnly.TryParse(dto.DateHired, out var dateHired))
+                    employee.EmploymentDetails.HireDate = dateHired;
+                // Note: Supervisor is not available in EmploymentDetails entity
+
+                // Update or create government IDs
+                if (employee.GovernmentId == null)
+                {
+                    employee.GovernmentId = new GovernmentId();
+                    employee.GovernmentId.Employee_Id = employeeId;
+                    // Initialize with default values to prevent null constraint violations
+                    employee.GovernmentId.SSS_Number = dto.SSS ?? "";
+                    employee.GovernmentId.PhilHealth_Number = dto.PhilHealth ?? "";
+                    employee.GovernmentId.HDMF_Number = dto.PagIbig ?? "";
+                    employee.GovernmentId.TIN_Number = dto.TIN ?? "";
+                    if (!string.IsNullOrEmpty(dto.NbiClearanceDate) && DateOnly.TryParse(dto.NbiClearanceDate, out var nbiDate))
+                        employee.GovernmentId.NbiClearanceDate = nbiDate;
+                    if (!string.IsNullOrEmpty(dto.BarangayClearanceDate) && DateOnly.TryParse(dto.BarangayClearanceDate, out var barangayDate))
+                        employee.GovernmentId.BarangayClearanceDate = barangayDate;
+                }
+                else
+                {
+                    // Update existing GovernmentId only if values are provided
+                    if (!string.IsNullOrEmpty(dto.SSS)) employee.GovernmentId.SSS_Number = dto.SSS;
+                    if (!string.IsNullOrEmpty(dto.PhilHealth)) employee.GovernmentId.PhilHealth_Number = dto.PhilHealth;
+                    if (!string.IsNullOrEmpty(dto.PagIbig)) employee.GovernmentId.HDMF_Number = dto.PagIbig;
+                    if (!string.IsNullOrEmpty(dto.TIN)) employee.GovernmentId.TIN_Number = dto.TIN;
+                    if (!string.IsNullOrEmpty(dto.NbiClearanceDate) && DateOnly.TryParse(dto.NbiClearanceDate, out var nbiDate))
+                        employee.GovernmentId.NbiClearanceDate = nbiDate;
+                    if (!string.IsNullOrEmpty(dto.BarangayClearanceDate) && DateOnly.TryParse(dto.BarangayClearanceDate, out var barangayDate))
+                        employee.GovernmentId.BarangayClearanceDate = barangayDate;
+                }
+
+                // Update or create company property
+                if (!string.IsNullOrEmpty(dto.CompanyIdNumber))
+                {
+                    if (employee.CompanyProperty == null)
+                    {
+                        employee.CompanyProperty = new CompanyProperty
+                        {
+                            Employee_Id = employeeId,
+                            Employee_Id_Code = dto.CompanyIdNumber,
+                            Id_Issue_Date = dto.CompanyIdIssued == true ? DateOnly.FromDateTime(DateTime.Now) : DateOnly.MinValue
+                        };
+                        _context.CompanyProperties.Add(employee.CompanyProperty);
+                    }
+                    else
+                    {
+                        employee.CompanyProperty.Employee_Id_Code = dto.CompanyIdNumber;
+                        if (dto.CompanyIdIssued == true && employee.CompanyProperty.Id_Issue_Date == DateOnly.MinValue)
+                        {
+                            employee.CompanyProperty.Id_Issue_Date = DateOnly.FromDateTime(DateTime.Now);
+                        }
+                    }
+                }
+
+                // Process new document files
+                await ProcessDocumentFiles(employeeId, dto);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("Successfully updated employee with ID: {EmployeeId}", employeeId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error updating employee with ID: {EmployeeId}", employeeId);
+                return false;
+            }
+        }
+
+        private async Task ProcessDocumentFiles(int employeeId, UpdateEmployeeDto dto)
+        {
+            var documentMappings = new Dictionary<string, string>
+            {
+                { nameof(dto.ResumeFile), "Resume" },
+                { nameof(dto.PersonalDataSheetFile), "Personal Data Sheet" },
+                { nameof(dto.IdPictureFile), "ID Picture" },
+                { nameof(dto.BirthCertificateFile), "Birth Certificate" },
+                { nameof(dto.MarriageCertificateFile), "Marriage Certificate" },
+                { nameof(dto.JobDescriptionFile), "Job Description" },
+                { nameof(dto.EmploymentContractFile), "Employment Contract" },
+                { nameof(dto.CompanyRulesFile), "Company Rules" },
+                { nameof(dto.NdaFile), "NDA" },
+                { nameof(dto.HandbookFile), "Handbook" },
+                { nameof(dto.SalaryAgreementFile), "Salary Agreement" },
+                { nameof(dto.Bir2316File), "BIR 2316" },
+                { nameof(dto.AttendanceRecordFile), "Attendance Record" },
+                { nameof(dto.AcknowledgmentReceiptFile), "Acknowledgment Receipt" },
+                { nameof(dto.MedicalCertificateFile), "Medical Certificate" },
+                { nameof(dto.DrugTestFile), "Drug Test" },
+                { nameof(dto.VaccinationCardFile), "Vaccination Card" },
+                { nameof(dto.PerformanceEvaluationFile), "Performance Evaluation" },
+                { nameof(dto.IncidentReportFile), "Incident Report" },
+                { nameof(dto.DisciplinaryRecordFile), "Disciplinary Record" },
+                { nameof(dto.PromotionRecordFile), "Promotion Record" }
+            };
+
+            foreach (var mapping in documentMappings)
+            {
+                var fileProperty = typeof(UpdateEmployeeDto).GetProperty(mapping.Key);
+                var file = fileProperty?.GetValue(dto) as IFormFile;
+
+                if (file != null && file.Length > 0)
+                {
+                    // Here you would typically save the file to storage and get the URL
+                    // For now, we'll create a placeholder URL
+                    var fileUrl = $"/uploads/employee_{employeeId}/{mapping.Value}_{DateTime.UtcNow:yyyyMMddHHmmss}{Path.GetExtension(file.FileName)}";
+
+                    var document = new EmployeeDocument
+                    {
+                        EmployeeId = employeeId,
+                        DocumentName = mapping.Value,
+                        DocumentType = mapping.Value,
+                        FileUrl = fileUrl,
+                        UploadDate = DateTime.UtcNow,
+                        Issue_Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Expiry_Date = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(1)) // Default 1 year expiry
+                    };
+
+                    _context.EmployeeDocuments.Add(document);
+                }
+            }
+        }
+
+        public async Task<List<UnregisteredEmployeeDto>> GetUnregisteredEmployeesAsync()
+        {
+            try
+            {
+                // Log total employees count for debugging
+                var totalEmployees = await _context.Employees.CountAsync();
+                _logger.LogInformation("Total employees in database: {count}", totalEmployees);
+
+                var employees = await _context.Employees
+                    .Include(e => e.EmploymentDetails)
+                    .Include(e => e.ContactInformation)
+                    .Where(e => string.IsNullOrEmpty(e.ErpUserId) || 
+                               e.ErpUserId == "00000000-0000-0000-0000-000000000000" || 
+                               e.ErpUserId == "null" ||
+                               e.ErpUserId == "NULL")
+                    .Select(e => new UnregisteredEmployeeDto
+                    {
+                        employeeId = e.EmployeeId,
+                        firstName = e.FirstName ?? string.Empty,
+                        lastName = e.LastName ?? string.Empty,
+                        emailAddress = e.ContactInformation != null ? (e.ContactInformation.EmailAddress ?? string.Empty) : string.Empty,
+                        department = e.EmploymentDetails != null ? (e.EmploymentDetails.Department ?? string.Empty) : string.Empty,
+                        position = e.EmploymentDetails != null ? (e.EmploymentDetails.Position ?? string.Empty) : string.Empty
+                    })
+                    .OrderBy(e => e.lastName)
+                    .ThenBy(e => e.firstName)
+                    .ToListAsync();
+
+                // Log for debugging
+                _logger.LogInformation("Found {count} unregistered employees out of {total}", employees.Count, totalEmployees);
+                foreach (var emp in employees.Take(5)) // Log first 5 for debugging
+                {
+                    _logger.LogInformation("Employee: {employeeId} - {firstName} {lastName}, Email: {emailAddress}, Dept: {department}, Pos: {position}", 
+                        emp.employeeId, emp.firstName, emp.lastName, emp.emailAddress, emp.department, emp.position);
+                }
+
+                return employees;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving unregistered employees");
+                return new List<UnregisteredEmployeeDto>();
+            }
+        }
+
+        public async Task<bool> UpdateEmployeeErpUserIdAsync(int employeeId, string erpUserId)
+        {
+            try
+            {
+                var employee = await _context.Employees.FindAsync(employeeId);
+                if (employee == null) return false;
+
+                employee.ErpUserId = erpUserId;
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("Successfully updated ErpUserId for employee {EmployeeId} to {ErpUserId}", employeeId, erpUserId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating ErpUserId for employee {EmployeeId}", employeeId);
                 return false;
             }
         }
