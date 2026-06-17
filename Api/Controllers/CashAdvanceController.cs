@@ -36,5 +36,24 @@ namespace ApiHrm.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Get all cash advance requests for Admin/Manager review.
+        /// Restricted to HR and Manager roles.
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "HR,Manager")]
+        public async Task<ActionResult<IEnumerable<CashAdvanceReadDto>>> GetAll()
+        {
+            try
+            {
+                var result = await _cashAdvanceService.GetAllAsync();
+                return Ok(result);
+            }
+            catch (BusinessValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

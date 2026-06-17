@@ -6,5 +6,6 @@ namespace Applications.Interfaces
     {
         Task<LeaveRequestReadDto> CreateAsync(LeaveRequestCreateDto dto);
         Task<LeaveRequestReadDto> UpdateStatusAsync(int id, LeaveStatusUpdateDto dto);
+        Task<IEnumerable<LeaveRequestReadDto>> GetAllAsync();
     }
 }

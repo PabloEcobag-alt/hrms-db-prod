@@ -57,5 +57,24 @@ namespace ApiHrm.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Get all leave requests for Admin/Manager review.
+        /// Restricted to HR and Manager roles.
+        /// </summary>
+        [HttpGet]
+        [Authorize(Roles = "HR,Manager")]
+        public async Task<ActionResult<IEnumerable<LeaveRequestReadDto>>> GetAll()
+        {
+            try
+            {
+                var result = await _leaveService.GetAllAsync();
+                return Ok(result);
+            }
+            catch (BusinessValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

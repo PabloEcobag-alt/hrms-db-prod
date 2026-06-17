@@ -84,5 +84,14 @@ namespace Applications.Services
 
             return _mapper.Map<CashAdvanceReadDto>(advance);
         }
+
+        public async Task<IEnumerable<CashAdvanceReadDto>> GetAllAsync()
+        {
+            var advances = await _context.CashAdvances
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<CashAdvanceReadDto>>(advances);
+        }
     }
 }

@@ -106,5 +106,15 @@ namespace Applications.Services
 
             return _mapper.Map<LeaveRequestReadDto>(request);
         }
+
+        public async Task<IEnumerable<LeaveRequestReadDto>> GetAllAsync()
+        {
+            var requests = await _context.LeaveRequests
+                .Include(r => r.LeaveType)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<LeaveRequestReadDto>>(requests);
+        }
     }
 }
