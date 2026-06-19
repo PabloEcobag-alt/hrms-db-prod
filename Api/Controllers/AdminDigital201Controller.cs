@@ -133,6 +133,25 @@ namespace ApiHrm.Controllers
             }
         }
 
+        [HttpGet("employees/unregistered")]
+        public async Task<ActionResult<List<UnregisteredEmployeeDto>>> GetUnregisteredEmployees()
+        {
+            try
+            {
+                _logger.LogInformation("Processing request to get unregistered employees");
+
+                var employees = await _digital201Service.GetUnregisteredEmployeesAsync();
+
+                _logger.LogInformation("Successfully retrieved {Count} unregistered employees", employees.Count);
+                return Ok(employees);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing request to get unregistered employees");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         [HttpGet("employees/{id}")]
         public async Task<ActionResult<EmployeeProfileDto>> GetEmployeeById(int id)
         {
@@ -179,6 +198,31 @@ namespace ApiHrm.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing request to update employee");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPatch("employees/link-erp-user")]
+        public async Task<ActionResult> LinkErpUser([FromBody] LinkErpUserDto dto)
+        {
+            try
+            {
+                _logger.LogInformation("Processing request to link ERP user {ErpUserId} to employee {EmployeeId}", dto.ErpUserId, dto.EmployeeId);
+
+                var result = await _digital201Service.UpdateEmployeeErpUserIdAsync(dto.EmployeeId, dto.ErpUserId);
+
+                if (!result)
+                {
+                    _logger.LogWarning("Failed to link ERP user to employee {EmployeeId}", dto.EmployeeId);
+                    return NotFound("Employee not found");
+                }
+
+                _logger.LogInformation("Successfully linked ERP user {ErpUserId} to employee {EmployeeId}", dto.ErpUserId, dto.EmployeeId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing request to link ERP user");
                 return StatusCode(500, "Internal server error");
             }
         }

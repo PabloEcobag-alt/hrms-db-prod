@@ -138,10 +138,10 @@ namespace Applications.Services
                 Gender = "Not Specified", // Default value
                 CivilStatus = "Single", // Default value
                 BloodType = "O+", // Default value
-                Status = "Active",
+                Status = applicant.Status ?? "Active", // Use applicant's status (Training/Probationary/Regular)
                 Role_ID = roleId,
                 AvatarIndex = 0,
-                ErpUserId = Guid.NewGuid().ToString() // Will be updated by authentication service
+                ErpUserId = null // Keep null initially, will be set during registration
             };
 
             _context.Employees.Add(newEmployee);
@@ -165,7 +165,7 @@ namespace Applications.Services
                 Position = applicant.Position,
                 Department = "General", // Default department
                 HireDate = applicant.Expected_Start_Date ?? DateOnly.FromDateTime(DateTime.UtcNow),
-                EmploymentStatus = "Regular",
+                EmploymentStatus = applicant.Status ?? "Regular", // Use applicant's status (Training/Probationary/Regular)
                 BasePay = 0
             };
             _context.EmploymentDetails.Add(employmentDetails);

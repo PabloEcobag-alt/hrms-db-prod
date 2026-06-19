@@ -421,6 +421,7 @@ namespace Applications.Services
                 .Include(e => e.GovernmentId)
                 .Include(e => e.EmergencyContacts)
                 .Include(e => e.CompanyProperty)
+                .Include(e => e.role)
                 .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
 
             if (employee == null)
@@ -446,6 +447,7 @@ namespace Applications.Services
                 Position = employee.EmploymentDetails?.Position ?? "",
                 Department = employee.EmploymentDetails?.Department ?? "",
                 Status = employee.Status,
+                Role = employee.role?.Role_Description ?? "",
                 Email = employee.ContactInformation?.EmailAddress ?? "",
                 PhoneNumber = employee.ContactInformation?.PhoneNumber ?? "",
                 DateOfBirth = employee.DateOfBirth.ToString("yyyy-MM-dd"),
@@ -749,7 +751,8 @@ namespace Applications.Services
                     .Where(e => string.IsNullOrEmpty(e.ErpUserId) || 
                                e.ErpUserId == "00000000-0000-0000-0000-000000000000" || 
                                e.ErpUserId == "null" ||
-                               e.ErpUserId == "NULL")
+                               e.ErpUserId == "NULL" ||
+                               e.ErpUserId == "")
                     .Select(e => new UnregisteredEmployeeDto
                     {
                         employeeId = e.EmployeeId,

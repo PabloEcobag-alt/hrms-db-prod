@@ -10,6 +10,7 @@ namespace Api.Contracts.Digital201
         public string DateOfBirth { get; set; } = string.Empty;
         public string DateHired { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;

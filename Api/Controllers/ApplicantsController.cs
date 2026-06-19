@@ -69,5 +69,16 @@ namespace ApiHrm.Controllers
 
             return Ok(applicant);
         }
+
+        [HttpPost("{id}/transform")]
+        public async Task<ActionResult<EmployeeReadDto>> Transform(int id)
+        {
+            // Use default role ID 1 for transformation (can be configured later)
+            var employee = await _applicantService.HireApplicantAsync(id, 1);
+            
+            if (employee == null) return NotFound("Applicant not found");
+
+            return Ok(employee);
+        }
     }
 }
