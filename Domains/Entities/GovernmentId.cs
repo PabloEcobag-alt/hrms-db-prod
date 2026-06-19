@@ -25,6 +25,9 @@ namespace ApiHrm.Domains.Entities
         [StringLength(20)]
         public string HDMF_Number { get; set; }
 
+        public DateOnly? NbiClearanceDate { get; set; }
+        public DateOnly? BarangayClearanceDate { get; set; }
+
         [ForeignKey("Employee_Id")]
         public virtual Employee Employee { get; set; }
     }

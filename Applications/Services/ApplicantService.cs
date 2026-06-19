@@ -31,8 +31,17 @@ namespace Applications.Services
 
         public async Task<IEnumerable<ApplicantReadDto>> GetAllApplicantsAsync()
         {
-            var applicants = await _context.Applicants.ToListAsync();
-            return _mapper.Map<IEnumerable<ApplicantReadDto>>(applicants);
+            try
+            {
+                var applicants = await _context.Applicants.ToListAsync();
+                return _mapper.Map<IEnumerable<ApplicantReadDto>>(applicants);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAllApplicantsAsync: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task<ApplicantDetailDto?> GetApplicantByIdAsync(int id)
@@ -136,6 +145,31 @@ namespace Applications.Services
             };
 
             _context.Employees.Add(newEmployee);
+            await _context.SaveChangesAsync();
+
+            // Create ContactInformation with phone number from applicant
+            var contactInfo = new ContactInformation
+            {
+                EmployeeId = newEmployee.EmployeeId,
+                EmailAddress = applicant.Email,
+                PhoneNumber = applicant.Phone,
+                PresentAddress = "Not specified",
+                PermanentAddress = "Not specified"
+            };
+            _context.ContactInformation.Add(contactInfo);
+
+            // Create EmploymentDetails with position from applicant
+            var employmentDetails = new EmploymentDetails
+            {
+                EmployeeId = newEmployee.EmployeeId,
+                Position = applicant.Position,
+                Department = "General", // Default department
+                HireDate = applicant.Expected_Start_Date ?? DateOnly.FromDateTime(DateTime.UtcNow),
+                EmploymentStatus = "Regular",
+                BasePay = 0
+            };
+            _context.EmploymentDetails.Add(employmentDetails);
+
             applicant.Status = "Hired"; 
             
             await _context.SaveChangesAsync();
@@ -147,6 +181,103 @@ namespace Applications.Services
             .FirstOrDefaultAsync(e => e.EmployeeId == newEmployee.EmployeeId);
 
             return _mapper.Map<EmployeeReadDto>(newEmployee);
+        }
+
+        public async Task<ApplicantReadDto> CreateEcommerceApplicationAsync(EcommerceApplicationDto dto)
+        {
+            var applicant = new Applicant
+            {
+                First_Name = dto.FirstName,
+                Last_Name = dto.LastName,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                Position = dto.Position,
+                Source = "Website Portal",
+                Hiring_Stage = "Initial Interview",
+                Status = "Pending",
+                Application_Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                Interview_Date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)), // Auto-set 2 days from application
+                Expected_Start_Date = null,
+                Resume_URL = dto.ResumeFileName ?? "",
+                Contact_Details = dto.CoverLetter,
+                Payment_Method = null,
+                NBI_Document_Completed = false,
+                Medical_Document_Completed = false,
+                XRay_Document_Completed = false
+            };
+
+            if (applicant.Checklists == null)
+            {
+                applicant.Checklists = new List<Checklist>();
+            }
+
+            _context.Applicants.Add(applicant);
+
+            // Initialize the checklist for Philippine compliance
+            applicant.Checklists.Add(new Checklist
+            {
+                Has_NBI = false,
+                Has_Medical = false,
+                Has_Xray = false,
+                has_SSS = false,
+                has_PAGIBIG = false,
+                has_PhilHealth = false,
+                has_TIN = false
+            });
+
+            await _context.SaveChangesAsync();
+
+            var result = await _context.Applicants
+                .FirstOrDefaultAsync(a => a.Applicant_ID == applicant.Applicant_ID);
+
+            return _mapper.Map<ApplicantReadDto>(applicant);
+        }
+
+        public async Task<ApplicantReadDto?> GetRecentEcommerceApplicantAsync()
+        {
+            var applicant = await _context.Applicants
+                .Where(a => a.Source == "Website Portal")
+                .OrderByDescending(a => a.Application_Date)
+                .FirstOrDefaultAsync();
+
+            if (applicant == null) return null;
+
+            return _mapper.Map<ApplicantReadDto>(applicant);
+        }
+
+        public async Task<ApplicantReadDto?> UpdateApplicantAsync(int id, ApplicantUpdateDto updateDto)
+        {
+            var applicant = await _context.Applicants.FindAsync(id);
+            
+            if (applicant == null) return null;
+
+            if (updateDto.Hiring_Stage != null)
+                applicant.Hiring_Stage = updateDto.Hiring_Stage;
+            
+            if (updateDto.Interview_Date != null)
+                applicant.Interview_Date = updateDto.Interview_Date;
+            
+            if (updateDto.Expected_Start_Date != null)
+                applicant.Expected_Start_Date = updateDto.Expected_Start_Date;
+            
+            if (updateDto.Status != null)
+                applicant.Status = updateDto.Status;
+            
+            if (updateDto.Position != null)
+                applicant.Position = updateDto.Position;
+            
+            if (updateDto.Phone != null)
+                applicant.Phone = updateDto.Phone;
+            
+            if (updateDto.Email != null)
+                applicant.Email = updateDto.Email;
+
+            await _context.SaveChangesAsync();
+
+            var result = await _context.Applicants
+                .FirstOrDefaultAsync(a => a.Applicant_ID == id);
+
+            return _mapper.Map<ApplicantReadDto>(result);
         }
     }
 }

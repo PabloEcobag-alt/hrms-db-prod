@@ -3,6 +3,7 @@ using System;
 using ApiHrm.Infrastructures.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api_hrm.Migrations
 {
     [DbContext(typeof(hrmAppDbContext))]
-    partial class hrmAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619045711_MakeResumeUrlNullable")]
+    partial class MakeResumeUrlNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,22 +41,25 @@ namespace api_hrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("Expected_Start_Date")
+                    b.Property<DateOnly>("Expected_Start_Date")
                         .HasColumnType("date");
 
                     b.Property<string>("First_Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Hiring_Stage")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("Interview_Date")
+                    b.Property<DateOnly>("Interview_Date")
                         .HasColumnType("date");
 
                     b.Property<string>("Last_Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("Medical_Document_Completed")
@@ -70,6 +76,7 @@ namespace api_hrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Position")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Resume_URL")

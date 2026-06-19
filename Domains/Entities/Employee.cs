@@ -11,9 +11,8 @@ namespace ApiHrm.Domains.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int EmployeeId { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string ErpUserId { get; set; } // FK to ms-authentication service
+        public string? ErpUserId { get; set; } // FK to ms-authentication service
 
         [Required]
         [StringLength(100)]

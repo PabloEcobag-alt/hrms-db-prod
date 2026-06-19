@@ -21,7 +21,19 @@ namespace ApiHrm.Infrastructures.Mapping
             CreateMap<ApplicantCreateDto, Applicant>();
             CreateMap<Applicant, ApplicantReadDto>()
                 .ForMember(dest => dest.FullName,
-                opt => opt.MapFrom(src => $"{src.First_Name} {src.Last_Name}"));
+                opt => opt.MapFrom(src => $"{src.First_Name} {src.Last_Name}"))
+                .ForMember(dest => dest.Position,
+                opt => opt.MapFrom(src => src.Position))
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.Hiring_Stage,
+                opt => opt.MapFrom(src => src.Hiring_Stage))
+                .ForMember(dest => dest.Source,
+                opt => opt.MapFrom(src => src.Source))
+                .ForMember(dest => dest.Interview_Date,
+                opt => opt.MapFrom(src => src.Interview_Date))
+                .ForMember(dest => dest.Expected_Start_Date,
+                opt => opt.MapFrom(src => src.Expected_Start_Date));
 
             CreateMap<DocumentCreateDto, Document>();
             CreateMap<Employee, EmployeeReadDto>()

@@ -3,7 +3,7 @@ namespace Api.Contracts.Digital201
     public class AdminEmployeeListDto
     {
         public int EmployeeId { get; set; }
-        public string ErpUserId { get; set; } = string.Empty;
+        public string? ErpUserId { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;

@@ -41,5 +41,33 @@ namespace ApiHrm.Controllers
 
             return Ok(employee);
         }
+
+        [HttpPost("ecommerce-application")]
+        [AllowAnonymous] // Allow public access from web-ecommerce
+        public async Task<ActionResult<ApplicantReadDto>> CreateEcommerceApplication([FromBody] EcommerceApplicationDto dto)
+        {
+            var applicant = await _applicantService.CreateEcommerceApplicationAsync(dto);
+            return CreatedAtAction(nameof(GetAll), new { id = applicant.Applicant_Id }, applicant);
+        }
+
+        [HttpGet("recent")]
+        public async Task<ActionResult<ApplicantReadDto>> GetRecentEcommerceApplicant()
+        {
+            var applicant = await _applicantService.GetRecentEcommerceApplicantAsync();
+            
+            if (applicant == null) return NotFound("No recent ecommerce applicant found");
+
+            return Ok(applicant);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<ApplicantReadDto>> Update(int id, [FromBody] ApplicantUpdateDto updateDto)
+        {
+            var applicant = await _applicantService.UpdateApplicantAsync(id, updateDto);
+            
+            if (applicant == null) return NotFound("Applicant not found");
+
+            return Ok(applicant);
+        }
     }
 }

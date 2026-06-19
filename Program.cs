@@ -93,7 +93,8 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 builder.Services.AddDbContext<hrmAppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString)
+        .ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
@@ -144,6 +145,9 @@ using (var scope = app.Services.CreateScope())
 
         // Seed Statutory Data
         await StatutoryDataSeeder.SeedStatutoryDataAsync(dbContext);
+
+        // Seed Roles
+        await RoleSeeder.SeedRolesAsync(dbContext);
     }
     catch (Exception ex)
     {

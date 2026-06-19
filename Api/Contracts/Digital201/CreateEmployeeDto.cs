@@ -8,6 +8,7 @@ namespace Api.Contracts.Digital201
         public string FirstName { get; set; } = string.Empty;
         public string MiddleName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
+        public DateOnly DateOfBirth { get; set; }
         public string Position { get; set; } = string.Empty;
         public DateTime DateHired { get; set; }
         public string ContactNo { get; set; } = string.Empty;

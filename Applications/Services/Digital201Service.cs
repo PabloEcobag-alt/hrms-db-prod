@@ -44,7 +44,7 @@ namespace Applications.Services
                     FirstName = dto.FirstName,
                     MiddleName = dto.MiddleName,
                     LastName = dto.LastName,
-                    DateOfBirth = dto.DateOfBirth.HasValue ? DateOnly.FromDateTime(dto.DateOfBirth.Value) : DateOnly.FromDateTime(DateTime.Now.AddYears(-25)),
+                    DateOfBirth = dto.DateOfBirth,
                     Gender = "Not Specified",
                     CivilStatus = "Not Specified",
                     Status = "Regular", // Default status
@@ -225,25 +225,30 @@ namespace Applications.Services
         {
             try
             {
+                _logger.LogInformation("Starting GetAllEmployeesAsync query");
+                
                 var employees = await _context.Employees
                     .Include(e => e.EmploymentDetails)
                     .Include(e => e.ContactInformation)
-                    .Select(e => new AdminEmployeeListDto
-                    {
-                        EmployeeId = e.EmployeeId,
-                        ErpUserId = e.ErpUserId,
-                        FirstName = e.FirstName,
-                        LastName = e.LastName,
-                        Department = e.EmploymentDetails != null ? e.EmploymentDetails.Department : string.Empty,
-                        Position = e.EmploymentDetails != null ? e.EmploymentDetails.Position : string.Empty,
-                        Status = e.Status,
-                        EmailAddress = e.ContactInformation != null ? e.ContactInformation.EmailAddress : string.Empty
-                    })
                     .OrderBy(e => e.LastName)
                     .ThenBy(e => e.FirstName)
                     .ToListAsync();
 
-                return employees;
+                var result = employees.Select(e => new AdminEmployeeListDto
+                {
+                    EmployeeId = e.EmployeeId,
+                    ErpUserId = e.ErpUserId ?? string.Empty,
+                    FirstName = e.FirstName,
+                    LastName = e.LastName,
+                    Department = e.EmploymentDetails?.Department ?? string.Empty,
+                    Position = e.EmploymentDetails?.Position ?? string.Empty,
+                    Status = e.Status,
+                    EmailAddress = e.ContactInformation?.EmailAddress ?? string.Empty
+                }).ToList();
+
+                _logger.LogInformation("Retrieved {Count} employees from database", result.Count);
+                
+                return result;
             }
             catch (Exception ex)
             {

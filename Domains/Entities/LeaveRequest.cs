@@ -26,6 +26,8 @@ namespace ApiHrm.Domains.Entities
 
         public string Status { get; set; }
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         [ForeignKey("Employee_Id")]
         public virtual Employee Employee { get; set; }
 

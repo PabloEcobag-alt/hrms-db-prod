@@ -3,6 +3,7 @@ using System;
 using ApiHrm.Infrastructures.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api_hrm.Migrations
 {
     [DbContext(typeof(hrmAppDbContext))]
-    partial class hrmAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619050117_MakeApplicantNameFieldsNullable")]
+    partial class MakeApplicantNameFieldsNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,7 +43,7 @@ namespace api_hrm.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("Expected_Start_Date")
+                    b.Property<DateOnly>("Expected_Start_Date")
                         .HasColumnType("date");
 
                     b.Property<string>("First_Name")
@@ -50,7 +53,7 @@ namespace api_hrm.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("Interview_Date")
+                    b.Property<DateOnly>("Interview_Date")
                         .HasColumnType("date");
 
                     b.Property<string>("Last_Name")
