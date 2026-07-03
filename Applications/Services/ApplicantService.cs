@@ -238,6 +238,7 @@ namespace Applications.Services
             var applicant = await _context.Applicants
                 .Where(a => a.Source == "Website Portal")
                 .OrderByDescending(a => a.Application_Date)
+                .ThenByDescending(a => a.Applicant_ID)
                 .FirstOrDefaultAsync();
 
             if (applicant == null) return null;
