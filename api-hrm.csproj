@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>api_hrm</RootNamespace>
     <UserSecretsId>570ee7eb-c124-4fd7-b39d-dc5a000def7d</UserSecretsId>
+    <NoWarn>CS8618;CS8601;CS8629</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

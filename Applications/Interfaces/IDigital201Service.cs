@@ -14,5 +14,6 @@ namespace Applications.Interfaces
         Task<List<UnregisteredEmployeeDto>> GetUnregisteredEmployeesAsync();
         Task<bool> UpdateEmployeeErpUserIdAsync(int employeeId, string erpUserId);
         Task<List<ExpiringDocumentDto>> GetExpiringDocumentsAsync(int days);
+        Task<bool> CheckDuplicateEmployeeAsync(string firstName, string lastName);
     }
 }

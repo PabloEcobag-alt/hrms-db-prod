@@ -11,8 +11,8 @@
         "POSTGRES_DB_HOST": "localhost",
         "POSTGRES_DB_PORT": "5432",
         "POSTGRES_USERNAME": "postgres",
-        "POSTGRES_PASSWORD": "postgres",
-        "JWT_SECRET_KEY": "9f3c2a7b6d4e8f1c0a5b9d3e7f6c2a1d8b4e7f0c9a6d3b5f1e8c2a7d9b0f4e6"
+        "POSTGRES_PASSWORD": "REPLACE_ME",
+        "JWT_SECRET_KEY": "REPLACE_VIA_ENV_VARIABLE"
       }
     },
     "https": {
@@ -25,8 +25,8 @@
         "POSTGRES_DB_HOST": "localhost",
         "POSTGRES_DB_PORT": "5432",
         "POSTGRES_USERNAME": "postgres",
-        "POSTGRES_PASSWORD": "postgres",
-        "JWT_SECRET_KEY": "9f3c2a7b6d4e8f1c0a5b9d3e7f6c2a1d8b4e7f0c9a6d3b5f1e8c2a7d9b0f4e6"
+        "POSTGRES_PASSWORD": "REPLACE_ME",
+        "JWT_SECRET_KEY": "REPLACE_VIA_ENV_VARIABLE"
       }
     }
   }

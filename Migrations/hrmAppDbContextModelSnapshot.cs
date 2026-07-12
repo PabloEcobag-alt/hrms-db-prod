@@ -851,6 +851,9 @@ namespace api_hrm.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly?>("BarangayClearanceDate")
+                        .HasColumnType("date");
+
                     b.Property<int>("Employee_Id")
                         .HasColumnType("integer");
 
@@ -858,6 +861,9 @@ namespace api_hrm.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<DateOnly?>("NbiClearanceDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("PhilHealth_Number")
                         .IsRequired()

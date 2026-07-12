@@ -152,6 +152,25 @@ namespace ApiHrm.Controllers
             }
         }
 
+        [HttpGet("employees/check-duplicate")]
+        public async Task<ActionResult<bool>> CheckDuplicateEmployee([FromQuery] string firstName, [FromQuery] string lastName)
+        {
+            try
+            {
+                _logger.LogInformation("Processing request to check duplicate employee: {FirstName} {LastName}", firstName, lastName);
+
+                var isDuplicate = await _digital201Service.CheckDuplicateEmployeeAsync(firstName, lastName);
+
+                _logger.LogInformation("Duplicate check result for {FirstName} {LastName}: {IsDuplicate}", firstName, lastName, isDuplicate);
+                return Ok(isDuplicate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing request to check duplicate employee");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         [HttpGet("employees/{id}")]
         public async Task<ActionResult<EmployeeProfileDto>> GetEmployeeById(int id)
         {

@@ -44,7 +44,7 @@ namespace Applications.Services
                     FirstName = dto.FirstName,
                     MiddleName = dto.MiddleName,
                     LastName = dto.LastName,
-                    DateOfBirth = dto.DateOfBirth,
+                    DateOfBirth = dto.DateOfBirth ?? new DateOnly(1900, 1, 1),
                     Gender = "Not Specified",
                     CivilStatus = "Not Specified",
                     Status = "Regular", // Default status

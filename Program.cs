@@ -148,6 +148,9 @@ using (var scope = app.Services.CreateScope())
 
         // Seed Roles
         await RoleSeeder.SeedRolesAsync(dbContext);
+
+        // Seed sample employees + applicants for local dev (idempotent).
+        await TestDataSeeder.SeedTestDataAsync(dbContext);
     }
     catch (Exception ex)
     {

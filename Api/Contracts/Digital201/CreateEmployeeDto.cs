@@ -8,7 +8,7 @@ namespace Api.Contracts.Digital201
         public string FirstName { get; set; } = string.Empty;
         public string MiddleName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public DateOnly DateOfBirth { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
         public string Position { get; set; } = string.Empty;
         public DateTime DateHired { get; set; }
         public string ContactNo { get; set; } = string.Empty;
@@ -25,11 +25,11 @@ namespace Api.Contracts.Digital201
         public IFormFile? BirthCertificateFile { get; set; }
         public IFormFile? MarriageCertificateFile { get; set; }
 
-        // Step 2: Government Requirements
-        public string SSS { get; set; } = string.Empty;
-        public string PhilHealth { get; set; } = string.Empty;
-        public string PagIbig { get; set; } = string.Empty;
-        public string TIN { get; set; } = string.Empty;
+        // Step 2: Government Requirements (optional)
+        public string? SSS { get; set; }
+        public string? PhilHealth { get; set; }
+        public string? PagIbig { get; set; }
+        public string? TIN { get; set; }
         public DateTime? NBIExpirationDate { get; set; }
         public DateTime? BarangayExpirationDate { get; set; }
 
@@ -40,8 +40,8 @@ namespace Api.Contracts.Digital201
         public IFormFile? NDAFile { get; set; }
         public IFormFile? HandbookFile { get; set; }
 
-        // Step 3: Payroll & Compensation
-        public string BankDetails { get; set; } = string.Empty;
+        // Step 3: Payroll & Compensation (optional)
+        public string? BankDetails { get; set; }
 
         // Step 3: Payroll Documents (Files)
         public IFormFile? SalaryAgreementFile { get; set; }
@@ -51,7 +51,7 @@ namespace Api.Contracts.Digital201
         // Step 3: Company Property Tracking
         public bool UniformIssued { get; set; }
         public bool CompanyIdIssued { get; set; }
-        public string EquipmentIssued { get; set; } = string.Empty;
+        public string? EquipmentIssued { get; set; }
 
         // Step 3: Property Documents (Files)
         public IFormFile? AcknowledgmentReceiptFile { get; set; }
@@ -67,9 +67,9 @@ namespace Api.Contracts.Digital201
         public IFormFile? DisciplinaryRecordFile { get; set; }
         public IFormFile? PromotionRecordFile { get; set; }
 
-        // Step 4: Admin Sign-Off
-        public string CheckedBy { get; set; } = string.Empty;
+        // Step 4: Admin Sign-Off (optional)
+        public string? CheckedBy { get; set; }
         public DateTime? CheckedDate { get; set; }
-        public string Remarks { get; set; } = string.Empty;
+        public string? Remarks { get; set; }
     }
 }
