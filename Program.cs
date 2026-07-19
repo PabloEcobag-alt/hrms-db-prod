@@ -1,6 +1,9 @@
+using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SemanticKernel;
 using Applications.Services;
 using ApiHrm.Infrastructures.Mapping; // Temporarily re-enabled for migration
+using ApiHrm.Infrastructures.BackgroundServices;
 using Applications.Interfaces;
 using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Infrastructures.Persistence.Seeders;
@@ -73,28 +76,40 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendUI", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3002")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3002", "http://localhost:3004", "http://localhost:3006")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
-// Database connection string from Configuration or Environment variables
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
-{
-    connectionString =
-        $"Host={Environment.GetEnvironmentVariable("POSTGRES_DB_HOST") ?? "localhost"};" +
-        $"Port={Environment.GetEnvironmentVariable("POSTGRES_DB_PORT") ?? "5432"};" +
-        $"Database=hrm_db;" +
-        $"Username={Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "postgres"};" +
-        $"Password={Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "postgres"}";
-}
+// Database connection string from Environment variables (Docker deployment)
+var connectionString =
+    $"Host={Environment.GetEnvironmentVariable("POSTGRES_DB_HOST") ?? "localhost"};" +
+    $"Port={Environment.GetEnvironmentVariable("POSTGRES_DB_PORT") ?? "5432"};" +
+    $"Database=hrm_db;" +
+    $"Username={Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "postgres"};" +
+    $"Password={Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "postgres"}";
 
 builder.Services.AddDbContext<hrmAppDbContext>(options =>
     options.UseNpgsql(connectionString)
         .ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
+
+// Redis Cache Configuration
+var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING") ?? "localhost:6379";
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+    options.InstanceName = "HRMS_";
+});
+
+// SQLite Analytics Database Configuration
+var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+Directory.CreateDirectory(dataDirectory);
+var sqliteConnectionString = $"Data Source={Path.Combine(dataDirectory, "recruitment_analytics.db")}";
+builder.Services.AddDbContext<AnalyticsDbContext>(options =>
+    options.UseSqlite(sqliteConnectionString));
+
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
@@ -109,6 +124,34 @@ builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IPayrollComputationService, PayrollComputationService>();
 builder.Services.AddScoped<IPayslipGeneratorService, PayslipGeneratorService>();
 builder.Services.AddScoped<IDigital201Service, Digital201Service>();
+
+// ===================================================================
+// AI Applicant Scoring Pipeline (Deliverable 2)
+// Event-driven: ecommerce submit -> in-memory Channel<int> queue ->
+// ScoringBackgroundService -> OpenAI (Semantic Kernel) -> SQLite Predictions.
+// ===================================================================
+
+// Lightweight in-memory queue of ApplicantIds awaiting scoring.
+builder.Services.AddSingleton(Channel.CreateUnbounded<int>(new UnboundedChannelOptions
+{
+    SingleReader = true,
+    SingleWriter = false
+}));
+
+// SECURITY: API key is read ONLY from the environment. Never hardcoded.
+var openAiApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+if (!string.IsNullOrWhiteSpace(openAiApiKey))
+{
+    // Registers IChatCompletionService backed by OpenAI (gpt-4o-mini).
+    builder.Services.AddOpenAIChatCompletion(OpenAIScoringService.ModelId, openAiApiKey);
+    builder.Services.AddScoped<IScoringService, OpenAIScoringService>();
+    builder.Services.AddHostedService<ScoringBackgroundService>();
+}
+else
+{
+    Console.WriteLine("[WARN] OPENAI_API_KEY is not set. AI applicant scoring is DISABLED; " +
+                      "queued applicants will not be scored until the key is provided.");
+}
 
 
 var app = builder.Build();
@@ -156,6 +199,18 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred during database migration/seeding on startup.");
+    }
+
+    // Initialize SQLite Analytics Database (separate from PostgreSQL)
+    try
+    {
+        var analyticsDbContext = services.GetRequiredService<AnalyticsDbContext>();
+        await analyticsDbContext.Database.EnsureCreatedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred during SQLite analytics database initialization on startup.");
     }
 }
 

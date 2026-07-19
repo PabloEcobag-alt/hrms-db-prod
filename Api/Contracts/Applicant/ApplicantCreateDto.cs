@@ -28,6 +28,8 @@ namespace Api.Contracts.Applicant
 
         public string expectedStart { get; set; } = default!; // ISO format: YYYY-MM-DD
 
+        public string hiringStage { get; set; } = "Initial Interview"; // Default hiring stage
+
         // Legacy fields for backward compatibility
         public string? Contact_Details { get; set; }
         public string? Payment_Method { get; set; }

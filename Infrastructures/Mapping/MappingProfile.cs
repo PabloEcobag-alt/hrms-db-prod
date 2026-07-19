@@ -18,7 +18,13 @@ namespace ApiHrm.Infrastructures.Mapping
         public MappingProfile()
         {
             CreateMap<Employee, EmployeeDetailDto>();
-            CreateMap<ApplicantCreateDto, Applicant>();
+            CreateMap<ApplicantCreateDto, Applicant>()
+                .ForMember(dest => dest.Hiring_Stage, 
+                    opt => opt.MapFrom(src => src.hiringStage))
+                .ForMember(dest => dest.Interview_Date, 
+                    opt => opt.MapFrom(src => src.interviewDate))
+                .ForMember(dest => dest.Expected_Start_Date, 
+                    opt => opt.MapFrom(src => src.expectedStart));
             CreateMap<Applicant, ApplicantReadDto>()
                 .ForMember(dest => dest.FullName,
                 opt => opt.MapFrom(src => $"{src.First_Name} {src.Last_Name}"))

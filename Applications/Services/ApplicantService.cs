@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using ApiHrm.Infrastructures.Persistence;
@@ -13,11 +14,13 @@ namespace Applications.Services
     {
         private readonly hrmAppDbContext _context;
         private readonly IMapper _mapper;
+        private readonly Channel<int> _scoringQueue;
 
-        public ApplicantService(hrmAppDbContext context, IMapper mapper)
+        public ApplicantService(hrmAppDbContext context, IMapper mapper, Channel<int> scoringQueue)
         {
             _context = context;
             _mapper = mapper;
+            _scoringQueue = scoringQueue;
         }
 
         public async Task<ChecklistReadDto> GetChecklistByApplicantAsync(int applicantId)
@@ -83,9 +86,23 @@ namespace Applications.Services
 
         public async Task<ApplicantReadDto> CreateApplicantAsync(ApplicantCreateDto createDto)
         {
-            var applicant = _mapper.Map<Applicant>(createDto);
-
-            applicant.Application_Date = DateOnly.FromDateTime(DateTime.UtcNow);
+            var applicant = new Applicant
+            {
+                First_Name = createDto.firstName,
+                Last_Name = createDto.lastName,
+                Email = createDto.email,
+                Phone = createDto.phone,
+                Position = createDto.position,
+                Source = createDto.source,
+                Hiring_Stage = createDto.hiringStage ?? "Initial Interview",
+                Interview_Date = string.IsNullOrEmpty(createDto.interviewDate) ? null : DateOnly.Parse(createDto.interviewDate),
+                Expected_Start_Date = string.IsNullOrEmpty(createDto.expectedStart) ? null : DateOnly.Parse(createDto.expectedStart),
+                Contact_Details = createDto.Contact_Details,
+                Payment_Method = createDto.Payment_Method,
+                Resume_URL = createDto.Resume_URL,
+                Status = createDto.Status ?? "Training",
+                Application_Date = DateOnly.FromDateTime(DateTime.UtcNow)
+            };
             
             if (applicant.Checklists == null)
                 {
@@ -226,6 +243,10 @@ namespace Applications.Services
             });
 
             await _context.SaveChangesAsync();
+
+            // Fire-and-forget: enqueue for AI scoring so the frontend request
+            // returns instantly without waiting for the OpenAI response.
+            _scoringQueue.Writer.TryWrite(applicant.Applicant_ID);
 
             var result = await _context.Applicants
                 .FirstOrDefaultAsync(a => a.Applicant_ID == applicant.Applicant_ID);
