@@ -18,7 +18,8 @@ namespace ApiHrm.Infrastructures.Persistence
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.CandidateId).IsRequired();
-                entity.Property(e => e.PredictedScore).IsRequired();
+                entity.Property(e => e.MatchScore).IsRequired();
+                entity.Property(e => e.ScreeningResult).IsRequired();
                 entity.Property(e => e.ModelVersion).IsRequired();
                 entity.Property(e => e.CreatedAt).IsRequired();
             });

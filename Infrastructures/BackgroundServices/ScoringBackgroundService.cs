@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using Applications.Interfaces;
+using Applications.Models;
 using ApiHrm.Domains.Entities;
 using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Infrastructures.Persistence.Analytics;
@@ -72,19 +73,20 @@ namespace ApiHrm.Infrastructures.BackgroundServices
             var position = string.IsNullOrWhiteSpace(applicant.Position) ? "Unspecified" : applicant.Position;
             var profile = BuildApplicantProfile(applicant);
 
-            var score = await scoringService.ScoreApplicantAsync(position, profile, cancellationToken);
+            var scoreResult = await scoringService.ScoreApplicantAsync(position, profile, cancellationToken);
 
             analyticsContext.Predictions.Add(new Prediction
             {
                 CandidateId = applicantId.ToString(),
-                PredictedScore = score,
-                ModelVersion = scoringService.ModelVersion,
+                MatchScore = scoreResult.MatchScore,
+                ScreeningResult = scoreResult.ScreeningResult,
+                ModelVersion = scoreResult.ModelVersion,
                 CreatedAt = DateTime.UtcNow
             });
 
             await analyticsContext.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Scored applicant {ApplicantId}: {Score}% match.", applicantId, score);
+            _logger.LogInformation("Scored applicant {ApplicantId}: {MatchScore}% match ({ScreeningResult}).", applicantId, scoreResult.MatchScore, scoreResult.ScreeningResult);
         }
 
         private static string BuildApplicantProfile(Applicant applicant)

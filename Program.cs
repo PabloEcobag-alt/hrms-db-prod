@@ -34,7 +34,7 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
 var issuer = jwtSettings["Issuer"];
 var audience = jwtSettings["Audience"];
-var cookieName = jwtSettings["CookieName"] ?? "sso_token";
+var cookieName = jwtSettings["CookieName"] ?? "erp_access_token";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -126,9 +126,10 @@ builder.Services.AddScoped<IPayslipGeneratorService, PayslipGeneratorService>();
 builder.Services.AddScoped<IDigital201Service, Digital201Service>();
 
 // ===================================================================
-// AI Applicant Scoring Pipeline (Deliverable 2)
+// AI Applicant Scoring Pipeline (ARAE Deliverable 1)
 // Event-driven: ecommerce submit -> in-memory Channel<int> queue ->
-// ScoringBackgroundService -> OpenAI (Semantic Kernel) -> SQLite Predictions.
+// ScoringBackgroundService -> IScoringService -> SQLite Predictions.
+// Default scorer is the local ML model; OpenAI remains opt-in.
 // ===================================================================
 
 // Lightweight in-memory queue of ApplicantIds awaiting scoring.
@@ -138,20 +139,36 @@ builder.Services.AddSingleton(Channel.CreateUnbounded<int>(new UnboundedChannelO
     SingleWriter = false
 }));
 
+// Local ML scorer is always registered so the pipeline is deterministic
+// and does not depend on external API keys.
+builder.Services.AddScoped<ILocalScoringService, LocalScoringService>();
+
+var scoringProvider = Environment.GetEnvironmentVariable("SCORING_PROVIDER") ?? "Local";
+
 // SECURITY: API key is read ONLY from the environment. Never hardcoded.
 var openAiApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-if (!string.IsNullOrWhiteSpace(openAiApiKey))
+if (scoringProvider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(openAiApiKey))
 {
     // Registers IChatCompletionService backed by OpenAI (gpt-4o-mini).
     builder.Services.AddOpenAIChatCompletion(OpenAIScoringService.ModelId, openAiApiKey);
     builder.Services.AddScoped<IScoringService, OpenAIScoringService>();
-    builder.Services.AddHostedService<ScoringBackgroundService>();
+    Console.WriteLine("[INFO] SCORING_PROVIDER=OpenAI; using gpt-4o-mini for applicant scoring.");
 }
 else
 {
-    Console.WriteLine("[WARN] OPENAI_API_KEY is not set. AI applicant scoring is DISABLED; " +
-                      "queued applicants will not be scored until the key is provided.");
+    if (scoringProvider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine("[WARN] SCORING_PROVIDER=OpenAI requested but OPENAI_API_KEY is missing; falling back to LocalScoringService.");
+    }
+    else
+    {
+        Console.WriteLine("[INFO] SCORING_PROVIDER=Local; using local ML model for applicant scoring.");
+    }
+
+    builder.Services.AddScoped<IScoringService, LocalScoringService>();
 }
+
+builder.Services.AddHostedService<ScoringBackgroundService>();
 
 
 var app = builder.Build();

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Applications.Interfaces;
+using Applications.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -30,7 +31,7 @@ namespace Applications.Services
 
         public string ModelVersion => ModelId;
 
-        public async Task<double> ScoreApplicantAsync(string position, string applicantProfile, CancellationToken cancellationToken = default)
+        public async Task<ApplicantScore> ScoreApplicantAsync(string position, string applicantProfile, CancellationToken cancellationToken = default)
         {
             var history = new ChatHistory();
             history.AddSystemMessage(SystemPrompt);
@@ -47,13 +48,29 @@ namespace Applications.Services
             var response = await _chat.GetChatMessageContentAsync(history, settings, kernel: null, cancellationToken);
             var raw = response.Content?.Trim() ?? string.Empty;
 
-            if (TryParseScore(raw, out var score))
+            double score = 0;
+            if (TryParseScore(raw, out var parsed))
             {
-                return Math.Clamp(score, 0, 100);
+                score = Math.Clamp(parsed, 0, 100);
+            }
+            else
+            {
+                _logger.LogWarning("OpenAI scoring returned unparsable content: {Raw}", raw);
             }
 
-            _logger.LogWarning("OpenAI scoring returned unparsable content: {Raw}", raw);
-            return 0;
+            return new ApplicantScore
+            {
+                MatchScore = score,
+                ScreeningResult = Classify(score),
+                ModelVersion = ModelVersion
+            };
+        }
+
+        private static string Classify(double score)
+        {
+            if (score >= 80) return "Qualified";
+            if (score >= 60) return "Review";
+            return "Not Qualified";
         }
 
         private static bool TryParseScore(string raw, out double score)
