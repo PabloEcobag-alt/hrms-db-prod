@@ -170,6 +170,12 @@ else
 
 builder.Services.AddHostedService<ScoringBackgroundService>();
 
+// ===================================================================
+// ARAE Deliverable 2 — Vector Search Integration
+// Local ChromaDB-backed semantic search for candidate profiles.
+// ===================================================================
+builder.Services.AddScoped<IVectorSearchService, LocalVectorSearchService>();
+
 
 var app = builder.Build();
 
