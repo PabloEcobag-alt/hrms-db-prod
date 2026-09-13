@@ -31,7 +31,7 @@ namespace Applications.Services
 
         public string ModelVersion => ModelId;
 
-        public async Task<ApplicantScore> ScoreApplicantAsync(string position, string applicantProfile, CancellationToken cancellationToken = default)
+        public async Task<ApplicantScore> ScoreApplicantAsync(string position, string applicantProfile, string skills = null, string experience = null, CancellationToken cancellationToken = default)
         {
             var history = new ChatHistory();
             history.AddSystemMessage(SystemPrompt);
@@ -68,8 +68,8 @@ namespace Applications.Services
 
         private static string Classify(double score)
         {
-            if (score >= 80) return "Qualified";
-            if (score >= 60) return "Review";
+            if (score >= 46) return "Qualified";
+            if (score >= 30) return "Review";
             return "Not Qualified";
         }
 

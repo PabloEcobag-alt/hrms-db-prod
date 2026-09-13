@@ -37,6 +37,8 @@ namespace Applications.Services
         public async Task<ApplicantScore> ScoreApplicantAsync(
             string position,
             string applicantProfile,
+            string skills = null,
+            string experience = null,
             CancellationToken cancellationToken = default)
         {
             var predictScript = Path.Combine(_toolingRoot, "predict.py");
@@ -52,11 +54,22 @@ namespace Applications.Services
 
             try
             {
+                // Use passed skills and experience if available, otherwise extract from profile
+                // Provide safe fallback strings to prevent Python crashes
+                var extractedSkills = !string.IsNullOrWhiteSpace(skills) ? skills : 
+                                      !string.IsNullOrWhiteSpace(ExtractFieldFromProfile(applicantProfile, "Skills:")) ? 
+                                      ExtractFieldFromProfile(applicantProfile, "Skills:") : "No skills provided";
+                var extractedExperience = !string.IsNullOrWhiteSpace(experience) ? experience : 
+                                            !string.IsNullOrWhiteSpace(ExtractFieldFromProfile(applicantProfile, "Experience:")) ? 
+                                            ExtractFieldFromProfile(applicantProfile, "Experience:") : "No experience provided";
+
                 var payload = new
                 {
                     position = position ?? string.Empty,
                     contact_details = applicantProfile ?? string.Empty,
-                    source = "Unknown"
+                    source = "Unknown",
+                    skills = extractedSkills,
+                    experience = extractedExperience
                 };
 
                 await File.WriteAllTextAsync(tempInput, JsonSerializer.Serialize(payload), cancellationToken);
@@ -79,6 +92,15 @@ namespace Applications.Services
                 var stdout = await process.StandardOutput.ReadToEndAsync(cancellationToken);
                 var stderr = await process.StandardError.ReadToEndAsync(cancellationToken);
 
+                // Log raw stdout for debugging
+                _logger.LogInformation("RAW Python stdout: {Stdout}", stdout);
+
+                // Log stderr if not empty (indicates Python warnings/errors)
+                if (!string.IsNullOrWhiteSpace(stderr))
+                {
+                    _logger.LogError("Python stderr output: {Stderr}", stderr);
+                }
+
                 if (process.ExitCode != 0)
                 {
                     _logger.LogError("Local scoring failed with exit code {ExitCode}. Stderr: {Stderr}",
@@ -94,19 +116,82 @@ namespace Applications.Services
                 }
 
                 var json = await File.ReadAllTextAsync(tempOutput, cancellationToken);
-                var result = JsonSerializer.Deserialize<ApplicantScore>(json, new JsonSerializerOptions
+                
+                // Log raw JSON from file for debugging
+                _logger.LogInformation("RAW JSON from output file: {Json}", json);
+                
+                // Safe JSON parsing: extract JSON object from stdout if needed
+                var jsonToParse = ExtractJsonFromOutput(json) ?? json;
+                
+                if (jsonToParse == null)
+                {
+                    _logger.LogError("Failed to extract JSON from output. Raw output: {RawOutput}", json);
+                    throw new InvalidOperationException("Local scorer returned invalid output: no JSON found");
+                }
+                
+                _logger.LogInformation("Attempting to deserialize JSON: {JsonToParse}", jsonToParse);
+                
+                var result = JsonSerializer.Deserialize<ApplicantScore>(jsonToParse, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 }) ?? throw new InvalidOperationException("Local scorer returned an empty or invalid score.");
+                
+                _logger.LogInformation("Successfully deserialized score: {MatchScore}, Result: {ScreeningResult}, Model: {ModelVersion}", 
+                    result.MatchScore, result.ScreeningResult, result.ModelVersion);
 
                 result.MatchScore = Math.Clamp(result.MatchScore, 0, 100);
                 return result;
+            }
+            catch (Exception ex)
+            {
+                // Fallback prediction to ensure applicant is never dropped from database
+                _logger.LogError(ex, "Local scoring failed, using fallback prediction");
+                return new ApplicantScore
+                {
+                    MatchScore = 15.0,
+                    ScreeningResult = "Not Qualified",
+                    ModelVersion = "fallback-error"
+                };
             }
             finally
             {
                 SafeDelete(tempInput);
                 SafeDelete(tempOutput);
             }
+        }
+
+        private static string ExtractFieldFromProfile(string profile, string fieldMarker)
+        {
+            if (string.IsNullOrWhiteSpace(profile))
+                return string.Empty;
+
+            var lines = profile.Split('\n');
+            foreach (var line in lines)
+            {
+                if (line.Trim().StartsWith(fieldMarker, StringComparison.OrdinalIgnoreCase))
+                {
+                    var index = line.IndexOf(fieldMarker, StringComparison.OrdinalIgnoreCase);
+                    return line.Substring(index + fieldMarker.Length).Trim();
+                }
+            }
+            return string.Empty;
+        }
+
+        private static string ExtractJsonFromOutput(string output)
+        {
+            if (string.IsNullOrWhiteSpace(output))
+                return null;
+
+            // Find first { and last }
+            var firstBrace = output.IndexOf('{');
+            var lastBrace = output.LastIndexOf('}');
+
+            if (firstBrace >= 0 && lastBrace > firstBrace)
+            {
+                return output.Substring(firstBrace, lastBrace - firstBrace + 1);
+            }
+
+            return null;
         }
 
         private static string ResolveDefaultToolingRoot()

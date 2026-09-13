@@ -19,19 +19,25 @@ namespace ApiHrm.Infrastructures.Mapping
         {
             CreateMap<Employee, EmployeeDetailDto>();
             CreateMap<ApplicantCreateDto, Applicant>()
-                .ForMember(dest => dest.Hiring_Stage, 
+                .ForMember(dest => dest.Hiring_Stage,
                     opt => opt.MapFrom(src => src.hiringStage))
-                .ForMember(dest => dest.Interview_Date, 
+                .ForMember(dest => dest.Interview_Date,
                     opt => opt.MapFrom(src => src.interviewDate))
-                .ForMember(dest => dest.Expected_Start_Date, 
-                    opt => opt.MapFrom(src => src.expectedStart));
+                .ForMember(dest => dest.Expected_Start_Date,
+                    opt => opt.MapFrom(src => src.expectedStart))
+                .ForMember(dest => dest.Probationary_End_Date,
+                    opt => opt.MapFrom(src => src.probationaryEndDate));
             CreateMap<Applicant, ApplicantReadDto>()
-                .ForMember(dest => dest.FullName,
-                opt => opt.MapFrom(src => $"{src.First_Name} {src.Last_Name}"))
+                .ForMember(dest => dest.First_Name,
+                opt => opt.MapFrom(src => src.First_Name))
+                .ForMember(dest => dest.Middle_Name,
+                opt => opt.MapFrom(src => src.Middle_Name))
+                .ForMember(dest => dest.Last_Name,
+                opt => opt.MapFrom(src => src.Last_Name))
                 .ForMember(dest => dest.Position,
                 opt => opt.MapFrom(src => src.Position))
-                .ForMember(dest => dest.Phone,
-                opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.Mobile,
+                opt => opt.MapFrom(src => src.Mobile))
                 .ForMember(dest => dest.Hiring_Stage,
                 opt => opt.MapFrom(src => src.Hiring_Stage))
                 .ForMember(dest => dest.Source,
@@ -39,13 +45,26 @@ namespace ApiHrm.Infrastructures.Mapping
                 .ForMember(dest => dest.Interview_Date,
                 opt => opt.MapFrom(src => src.Interview_Date))
                 .ForMember(dest => dest.Expected_Start_Date,
-                opt => opt.MapFrom(src => src.Expected_Start_Date));
+                opt => opt.MapFrom(src => src.Expected_Start_Date))
+                .ForMember(dest => dest.Probationary_End_Date,
+                opt => opt.MapFrom(src => src.Probationary_End_Date))
+                .ForMember(dest => dest.Interview_Notes,
+                opt => opt.MapFrom(src => src.Interview_Notes))
+                // AI Scoring fields - set to default values (will be populated asynchronously)
+                .ForMember(dest => dest.Ai_Match_Score,
+                opt => opt.MapFrom(src => (double?)null))
+                .ForMember(dest => dest.Screening_Result,
+                opt => opt.MapFrom(src => "Pending"));
 
             CreateMap<DocumentCreateDto, Document>();
             CreateMap<Employee, EmployeeReadDto>()
                 .MaxDepth(3)
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
-                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.role.Role_Description));
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.role != null ? src.role.Role_Description : ""))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+                .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.EmploymentDetails != null ? src.EmploymentDetails.Position : ""))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.ContactInformation != null ? src.ContactInformation.EmailAddress : ""))
+                .ForMember(dest => dest.Hire_Date, opt => opt.MapFrom(src => src.EmploymentDetails != null ? src.EmploymentDetails.HireDate.ToDateTime(TimeOnly.MinValue) : DateTime.UtcNow));
 
             CreateMap<EmployeeCreateDto, Employee>()
                 .ForMember(dest => dest.EmployeeId, opt => opt.Ignore());

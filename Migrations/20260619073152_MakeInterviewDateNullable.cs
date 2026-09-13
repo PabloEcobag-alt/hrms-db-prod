@@ -14,7 +14,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateOnly>(
                 name: "Interview_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: true,
                 oldClrType: typeof(DateOnly),
@@ -23,7 +23,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateOnly>(
                 name: "Expected_Start_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: true,
                 oldClrType: typeof(DateOnly),
@@ -36,7 +36,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateOnly>(
                 name: "Interview_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: false,
                 defaultValue: new DateOnly(1, 1, 1),
@@ -47,7 +47,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateOnly>(
                 name: "Expected_Start_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: false,
                 defaultValue: new DateOnly(1, 1, 1),

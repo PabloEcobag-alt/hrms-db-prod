@@ -36,7 +36,7 @@ namespace ApiHrm.Domains.Entities
 
         // Legacy fields maintained for compatibility
         public DateOnly Issue_Date { get; set; }
-        public DateOnly Expiry_Date { get; set; }
+        public DateOnly? Expiry_Date { get; set; }
 
         // Navigation Property
         [ForeignKey("EmployeeId")]

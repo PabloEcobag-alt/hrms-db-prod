@@ -13,7 +13,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Position",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
@@ -22,7 +22,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Last_Name",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
@@ -31,7 +31,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "First_Name",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
@@ -40,7 +40,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
@@ -53,7 +53,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Position",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "",
@@ -64,7 +64,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Last_Name",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "",
@@ -75,7 +75,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "First_Name",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "",
@@ -86,7 +86,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Email",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "",

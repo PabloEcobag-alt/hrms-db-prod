@@ -65,7 +65,7 @@ namespace api_hrm.Migrations
 
                     b.HasKey("Applicant_ID");
 
-                    b.ToTable("r_Apllicant_Records", "public");
+                    b.ToTable("r_Applicant_Records", "public");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.AttendanceLog", b =>

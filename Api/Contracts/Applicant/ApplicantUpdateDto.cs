@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Api.Contracts.Applicant
 {
     public class ApplicantUpdateDto
@@ -5,9 +7,14 @@ namespace Api.Contracts.Applicant
         public string? Hiring_Stage { get; set; }
         public DateOnly? Interview_Date { get; set; }
         public DateOnly? Expected_Start_Date { get; set; }
+        public DateOnly? Probationary_End_Date { get; set; }
         public string? Status { get; set; }
         public string? Position { get; set; }
-        public string? Phone { get; set; }
+
+        [RegularExpression(@"^\+63\d{10}$", ErrorMessage = "Invalid Philippine mobile format")]
+        public string? Mobile { get; set; }
+
         public string? Email { get; set; }
+        public string? Interview_Notes { get; set; }
     }
 }

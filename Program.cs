@@ -7,6 +7,7 @@ using ApiHrm.Infrastructures.BackgroundServices;
 using Applications.Interfaces;
 using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Infrastructures.Persistence.Seeders;
+using ApiHrm.Infrastructures.Persistence.Interceptors;
 using AutoMapper; // Temporarily re-enabled for migration
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +28,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(typeof(MappingProfile)); // Temporarily re-enabled for migration
 builder.Services.AddHttpContextAccessor();
 
+// MediatR Configuration for Event-Driven Architecture
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
 // Configure CompanySettings
 builder.Services.Configure<CompanySettings>(builder.Configuration.GetSection("CompanySettings"));
 
@@ -35,21 +39,33 @@ var secretKey = jwtSettings["SecretKey"];
 var issuer = jwtSettings["Issuer"];
 var audience = jwtSettings["Audience"];
 var cookieName = jwtSettings["CookieName"] ?? "erp_access_token";
+var validateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.Authority = "https://host.docker.internal:5001/";
+        options.RequireHttpsMetadata = false;
+        options.BackchannelHttpHandler = new HostHeaderHandler
+        {
+            InnerHandler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            }
+        };
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidateAudience = true,
+            ValidateAudience = validateAudience,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = issuer,
             ValidAudience = audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
             ClockSkew = TimeSpan.Zero
         };
+
+        options.RefreshOnIssuerKeyNotFound = true;
 
         options.Events = new JwtBearerEvents
         {
@@ -91,9 +107,14 @@ var connectionString =
     $"Username={Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "postgres"};" +
     $"Password={Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "postgres"}";
 
-builder.Services.AddDbContext<hrmAppDbContext>(options =>
+builder.Services.AddSingleton<AuditInterceptor>();
+builder.Services.AddDbContext<hrmAppDbContext>((serviceProvider, options) =>
+{
+    var interceptor = serviceProvider.GetRequiredService<AuditInterceptor>();
     options.UseNpgsql(connectionString)
-        .ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
+        .ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning))
+        .AddInterceptors(interceptor);
+});
 
 // Redis Cache Configuration
 var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING") ?? "localhost:6379";
@@ -176,16 +197,23 @@ builder.Services.AddHostedService<ScoringBackgroundService>();
 // ===================================================================
 builder.Services.AddScoped<IVectorSearchService, LocalVectorSearchService>();
 
+// ===================================================================
+// ARAE Deliverable 1 — Analytics Dashboard API
+// Exposes AI predictions and aggregated analytics to the Next.js frontend.
+// ===================================================================
+builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi("/api/hrms/openapi/v1.json");
     app.UseSwaggerUi(options =>
     {
-        options.DocumentPath = "/openapi/v1.json";
+        options.DocumentPath = "/api/hrms/openapi/v1.json";
     });
 }
 
@@ -204,10 +232,12 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         var dbContext = services.GetRequiredService<hrmAppDbContext>();
-        await dbContext.Database.MigrateAsync();
+        // Auto-migration disabled - database schema is already correct
+        // await dbContext.Database.MigrateAsync();
 
         // Seed Statutory Data
         await StatutoryDataSeeder.SeedStatutoryDataAsync(dbContext);
@@ -215,16 +245,22 @@ using (var scope = app.Services.CreateScope())
         // Seed Roles
         await RoleSeeder.SeedRolesAsync(dbContext);
 
+        // Seed Enterprise Mock Data (50 realistic applicants)
+        await EnterpriseMockSeeder.SeedEnterpriseMockDataAsync(dbContext, logger);
+
         // Seed sample employees + applicants for local dev (idempotent).
         await TestDataSeeder.SeedTestDataAsync(dbContext);
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred during database migration/seeding on startup.");
     }
+}
 
-    // Initialize SQLite Analytics Database (separate from PostgreSQL)
+// Initialize SQLite Analytics Database (separate from PostgreSQL)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
     try
     {
         var analyticsDbContext = services.GetRequiredService<AnalyticsDbContext>();
@@ -238,3 +274,19 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public class HostHeaderHandler : DelegatingHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (request.RequestUri != null && request.RequestUri.Host == "localhost")
+        {
+            var builder = new UriBuilder(request.RequestUri);
+            builder.Host = "host.docker.internal";
+            request.RequestUri = builder.Uri;
+        }
+
+        request.Headers.Host = "localhost:5001";
+        return base.SendAsync(request, cancellationToken);
+    }
+}

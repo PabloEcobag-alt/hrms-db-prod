@@ -79,7 +79,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "Application_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "timestamp without time zone",
                 nullable: false,
                 oldClrType: typeof(DateTime),
@@ -157,7 +157,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "Application_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "timestamp with time zone",
                 nullable: false,
                 oldClrType: typeof(DateTime),

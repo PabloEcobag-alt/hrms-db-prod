@@ -1,8 +1,10 @@
 namespace Api.Contracts.Applicant
 {
-    public class HireRequest
+    public class HireApplicantDto
     {
         public int ApplicantId { get; set; }
-        public int RoleId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? ProbationaryEndDate { get; set; }
+        public string HiringStage { get; set; } = string.Empty;
     }
 }

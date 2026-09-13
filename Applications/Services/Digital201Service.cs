@@ -397,15 +397,15 @@ namespace Applications.Services
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             
             var expiringDocuments = await _context.EmployeeDocuments
-                .Where(ed => ed.Expiry_Date <= cutoffDate && ed.Expiry_Date > today)
+                .Where(ed => ed.Expiry_Date.HasValue && ed.Expiry_Date <= cutoffDate && ed.Expiry_Date > today)
                 .Select(ed => new ExpiringDocumentDto
                 {
                     EmployeeId = ed.EmployeeId,
                     EmployeeName = ed.Employee.FirstName + " " + ed.Employee.LastName,
                     DocumentType = ed.DocumentType,
                     DocumentName = ed.DocumentName,
-                    ExpirationDate = ed.Expiry_Date.ToDateTime(TimeOnly.MinValue),
-                    DaysUntilExpiration = ed.Expiry_Date.DayNumber - today.DayNumber
+                    ExpirationDate = ed.Expiry_Date.Value.ToDateTime(TimeOnly.MinValue),
+                    DaysUntilExpiration = ed.Expiry_Date.Value.DayNumber - today.DayNumber
                 })
                 .OrderBy(ed => ed.ExpirationDate)
                 .ToListAsync();
@@ -477,62 +477,78 @@ namespace Applications.Services
 
         public async Task<EmployeeProfileDto?> GetEmployeeByErpUserIdAsync(string erpUserId)
         {
-            var employee = await _context.Employees
-                .Include(e => e.EmploymentDetails)
-                .Include(e => e.ContactInformation)
-                .Include(e => e.GovernmentId)
-                .Include(e => e.EmergencyContacts)
-                .Include(e => e.CompanyProperty)
-                .FirstOrDefaultAsync(e => e.ErpUserId == erpUserId);
-
-            if (employee == null)
-                return null;
-
-            // Initialize missing entities to prevent null reference exceptions
-            if (employee.EmploymentDetails == null)
-                employee.EmploymentDetails = new EmploymentDetails();
-
-            if (employee.ContactInformation == null)
-                employee.ContactInformation = new ContactInformation();
-
-            if (employee.GovernmentId == null)
-                employee.GovernmentId = new GovernmentId();
-
-            return new EmployeeProfileDto
+            try
             {
-                EmployeeId = employee.EmployeeId,
-                ErpUserId = employee.ErpUserId,
-                FirstName = employee.FirstName,
-                MiddleName = employee.MiddleName ?? "",
-                LastName = employee.LastName,
-                Position = employee.EmploymentDetails?.Position ?? "",
-                Department = employee.EmploymentDetails?.Department ?? "",
-                Status = employee.Status,
-                Email = employee.ContactInformation?.EmailAddress ?? "",
-                PhoneNumber = employee.ContactInformation?.PhoneNumber ?? "",
-                DateOfBirth = employee.DateOfBirth.ToString("yyyy-MM-dd"),
-                DateHired = employee.EmploymentDetails?.HireDate.ToString("yyyy-MM-dd") ?? "",
-                AssignedLocation = employee.EmploymentDetails?.Department ?? "",
-                Supervisor = "", // Not available in EmploymentDetails entity
-                EmergencyContactName = employee.EmergencyContacts?.FirstOrDefault()?.FirstName + " " + employee.EmergencyContacts?.FirstOrDefault()?.LastName ?? "",
-                EmergencyContactPhone = employee.EmergencyContacts?.FirstOrDefault()?.PhoneNumber ?? "",
-                EmergencyContactAddress = employee.ContactInformation?.PresentAddress ?? "",
-                EmergencyContactRelationship = employee.EmergencyContacts?.FirstOrDefault()?.Relationship ?? "",
-                SSS = employee.GovernmentId?.SSS_Number ?? "",
-                PhilHealth = employee.GovernmentId?.PhilHealth_Number ?? "",
-                PagIbig = employee.GovernmentId?.HDMF_Number ?? "",
-                TIN = employee.GovernmentId?.TIN_Number ?? "",
-                NbiClearanceDate = employee.GovernmentId?.NbiClearanceDate?.ToString("yyyy-MM-dd") ?? "",
-                BarangayClearanceDate = employee.GovernmentId?.BarangayClearanceDate?.ToString("yyyy-MM-dd") ?? "",
-                BankDetails = "", // Not available in GovernmentId entity
-                UniformIssued = false, // Not available in GovernmentId entity
-                CompanyIdIssued = employee.CompanyProperty?.Id_Issue_Date != DateOnly.MinValue, // Not available in GovernmentId entity
-                CompanyIdNumber = employee.CompanyProperty?.Employee_Id_Code ?? "", // Not available in GovernmentId entity
-                EquipmentIssued = "", // Not available in GovernmentId entity
-                CheckedBy = "", // Not available in GovernmentId entity
-                CheckedDate = "", // Not available in GovernmentId entity
-                Remarks = "" // Not available in GovernmentId entity
-            };
+                _logger.LogInformation("Looking up employee for ErpUserId: {ErpUserId}", erpUserId);
+                
+                // Load employee without includes to avoid query issues
+                var employee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.ErpUserId == erpUserId);
+
+                if (employee == null)
+                {
+                    _logger.LogWarning("Employee not found for ErpUserId: {ErpUserId}", erpUserId);
+                    return null;
+                }
+
+                // Load related entities separately
+                var employmentDetails = await _context.EmploymentDetails
+                    .FirstOrDefaultAsync(ed => ed.EmployeeId == employee.EmployeeId);
+                
+                var contactInfo = await _context.ContactInformation
+                    .FirstOrDefaultAsync(ci => ci.EmployeeId == employee.EmployeeId);
+                
+                var governmentId = await _context.GovernmentIds
+                    .FirstOrDefaultAsync(gi => gi.Employee_Id == employee.EmployeeId);
+                
+                var emergencyContacts = await _context.EmergencyContacts
+                    .Where(ec => ec.EmployeeId == employee.EmployeeId)
+                    .ToListAsync();
+                
+                var companyProperty = await _context.CompanyProperties
+                    .FirstOrDefaultAsync(cp => cp.Employee_Id == employee.EmployeeId);
+
+                return new EmployeeProfileDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    ErpUserId = employee.ErpUserId,
+                    FirstName = employee.FirstName,
+                    MiddleName = employee.MiddleName ?? "",
+                    LastName = employee.LastName,
+                    Position = employmentDetails?.Position ?? "",
+                    Department = employmentDetails?.Department ?? "",
+                    Status = employee.Status,
+                    Email = contactInfo?.EmailAddress ?? "",
+                    PhoneNumber = contactInfo?.PhoneNumber ?? "",
+                    DateOfBirth = employee.DateOfBirth.ToString("yyyy-MM-dd"),
+                    DateHired = employmentDetails?.HireDate.ToString("yyyy-MM-dd") ?? "",
+                    AssignedLocation = employmentDetails?.Department ?? "",
+                    Supervisor = "", // Not available in EmploymentDetails entity
+                    EmergencyContactName = emergencyContacts?.FirstOrDefault()?.FirstName + " " + emergencyContacts?.FirstOrDefault()?.LastName ?? "",
+                    EmergencyContactPhone = emergencyContacts?.FirstOrDefault()?.PhoneNumber ?? "",
+                    EmergencyContactAddress = contactInfo?.PresentAddress ?? "",
+                    EmergencyContactRelationship = emergencyContacts?.FirstOrDefault()?.Relationship ?? "",
+                    SSS = governmentId?.SSS_Number ?? "",
+                    PhilHealth = governmentId?.PhilHealth_Number ?? "",
+                    PagIbig = governmentId?.HDMF_Number ?? "",
+                    TIN = governmentId?.TIN_Number ?? "",
+                    NbiClearanceDate = governmentId?.NbiClearanceDate?.ToString("yyyy-MM-dd") ?? "",
+                    BarangayClearanceDate = governmentId?.BarangayClearanceDate?.ToString("yyyy-MM-dd") ?? "",
+                    BankDetails = "", // Not available in GovernmentId entity
+                    UniformIssued = false, // Not available in GovernmentId entity
+                    CompanyIdIssued = companyProperty?.Id_Issue_Date != DateOnly.MinValue,
+                    CompanyIdNumber = companyProperty?.Employee_Id_Code ?? "",
+                    EquipmentIssued = "", // Not available in GovernmentId entity
+                    CheckedBy = "", // Not available in GovernmentId entity
+                    CheckedDate = "", // Not available in GovernmentId entity
+                    Remarks = "" // Not available in GovernmentId entity
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving employee by ErpUserId: {ErpUserId}", erpUserId);
+                throw;
+            }
         }
 
         public async Task<bool> UpdateEmployeeAsync(int employeeId, UpdateEmployeeDto dto)
@@ -560,6 +576,17 @@ namespace Applications.Services
                 if (!string.IsNullOrEmpty(dto.Status)) employee.Status = dto.Status;
                 if (!string.IsNullOrEmpty(dto.DateOfBirth) && DateOnly.TryParse(dto.DateOfBirth, out var dob))
                     employee.DateOfBirth = dob;
+
+                // Update Role - map Role string to Role_ID
+                if (!string.IsNullOrEmpty(dto.Role))
+                {
+                    var role = await _context.Roles
+                        .FirstOrDefaultAsync(r => r.Role_Description == dto.Role);
+                    if (role != null)
+                    {
+                        employee.Role_ID = role.Role_ID;
+                    }
+                }
 
                 // Update or create contact information
                 if (employee.ContactInformation == null)

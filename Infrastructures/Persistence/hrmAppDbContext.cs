@@ -197,19 +197,6 @@ namespace ApiHrm.Infrastructures.Persistence
                 .HasForeignKey(e => e.PayslipId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Employee Document -> Employee
-            modelBuilder.Entity<EmployeeDocument>()
-                .HasOne(d => d.Employee)
-                .WithMany()
-                .HasForeignKey(d => d.EmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Employee Document: expiry_date > issue_date constraint
-            modelBuilder.Entity<EmployeeDocument>()
-                .ToTable(t => t.HasCheckConstraint(
-                    "CK_Employee_Document_Expiry_After_Issue",
-                    "\"Expiry_Date\" > \"Issue_Date\""));
-
             // ===== Sprint 4 - Employee Information =====
 
             // EmergencyContact -> Employee (one-to-many) - REFACTORED
@@ -240,6 +227,19 @@ namespace ApiHrm.Infrastructures.Persistence
                 .HasForeignKey(d => d.Employee_Id)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Employee Document -> Employee (one-to-many) - REFACTORED
+            modelBuilder.Entity<EmployeeDocument>()
+                .HasOne(d => d.Employee)
+                .WithMany(e => e.EmployeeDocuments)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Employee Document: expiry_date > issue_date constraint
+            modelBuilder.Entity<EmployeeDocument>()
+                .ToTable(t => t.HasCheckConstraint(
+                    "CK_Employee_Document_Expiry_After_Issue",
+                    "\"Expiry_Date\" > \"Issue_Date\""));
+
             // ===== Digital 201 Schema Refactoring - New Entity Configurations =====
 
             // EmploymentDetails -> Employee (one-to-one)
@@ -261,12 +261,16 @@ namespace ApiHrm.Infrastructures.Persistence
                 .HasForeignKey<ContactInformation>(ci => ci.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // EmployeeDocument -> Employee (one-to-many) - REFACTORED
-            modelBuilder.Entity<EmployeeDocument>()
-                .HasOne(ed => ed.Employee)
-                .WithMany(e => e.EmployeeDocuments)
-                .HasForeignKey(ed => ed.EmployeeId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // ===== Audit Log Configuration for JSONB Interceptor =====
+
+            // AuditLog: JSONB column mappings for automatic audit snapshots
+            modelBuilder.Entity<AuditLog>()
+                .Property(a => a.OldValues)
+                .HasColumnType("jsonb");
+
+            modelBuilder.Entity<AuditLog>()
+                .Property(a => a.NewValues)
+                .HasColumnType("jsonb");
 
         }
     }

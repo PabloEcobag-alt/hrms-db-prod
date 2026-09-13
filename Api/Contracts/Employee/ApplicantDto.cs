@@ -11,7 +11,7 @@ namespace Api.Contracts.Employee
         public string source { get; set; }
         public ApplicantDocumentsDto documents { get; set; }
         public string email { get; set; }
-        public string phone { get; set; }
+        public string mobile { get; set; }
         public int avatarIndex { get; set; }
         public string appliedDate { get; set; } // ISO format: YYYY-MM-DD
         public string interviewDate { get; set; } // ISO format: YYYY-MM-DD

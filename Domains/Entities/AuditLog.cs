@@ -25,5 +25,11 @@ namespace ApiHrm.Domains.Entities
         public string Ip_Address { get; set; }
 
         public DateTime Timestamp { get; set; }
+
+        // JSONB Snapshot Properties for Automatic Audit Interceptor
+        public string? OldValues { get; set; }  // Serialized JSON of original entity state
+        public string? NewValues { get; set; }  // Serialized JSON of current entity state
+        public string Operation { get; set; } = string.Empty;  // INSERT, UPDATE, DELETE
+        public string EntityName { get; set; } = string.Empty;  // Entity type name
     }
 }

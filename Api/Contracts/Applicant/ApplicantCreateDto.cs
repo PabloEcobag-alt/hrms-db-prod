@@ -8,6 +8,9 @@ namespace Api.Contracts.Applicant
         [StringLength(50)]
         public string firstName { get; set; } = default!;
 
+        [StringLength(50)]
+        public string? middleName { get; set; }
+
         [Required(ErrorMessage = "Last name is required")]
         [StringLength(50)]
         public string lastName { get; set; } = default!;
@@ -22,11 +25,14 @@ namespace Api.Contracts.Applicant
         [EmailAddress(ErrorMessage = "Invalid email format")]
         public string email { get; set; } = default!;
 
-        public string phone { get; set; } = default!;
+        [RegularExpression(@"^\+63\d{10}$", ErrorMessage = "Invalid Philippine mobile format")]
+        public string mobile { get; set; } = default!;
 
-        public string interviewDate { get; set; } = default!; // ISO format: YYYY-MM-DD
+        public DateOnly? interviewDate { get; set; }
 
-        public string expectedStart { get; set; } = default!; // ISO format: YYYY-MM-DD
+        public DateOnly? expectedStart { get; set; }
+
+        public DateOnly? probationaryEndDate { get; set; }
 
         public string hiringStage { get; set; } = "Initial Interview"; // Default hiring stage
 

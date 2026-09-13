@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Applications.Models
 {
     /// <summary>
@@ -7,8 +9,13 @@ namespace Applications.Models
     /// </summary>
     public class ApplicantScore
     {
+        [JsonPropertyName("match_score")]
         public double MatchScore { get; set; }
+
+        [JsonPropertyName("screening_result")]
         public string ScreeningResult { get; set; } = "Not Qualified";
+
+        [JsonPropertyName("model_version")]
         public string ModelVersion { get; set; } = string.Empty;
     }
 }

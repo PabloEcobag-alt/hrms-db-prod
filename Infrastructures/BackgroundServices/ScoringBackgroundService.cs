@@ -70,19 +70,47 @@ namespace ApiHrm.Infrastructures.BackgroundServices
                 return;
             }
 
+            // Defense in depth: skip failed applicants
+            if (applicant.Hiring_Stage == "Failed")
+            {
+                _logger.LogInformation("Applicant {ApplicantId} has Hiring_Stage 'Failed'; skipping scoring.", applicantId);
+                return;
+            }
+
             var position = string.IsNullOrWhiteSpace(applicant.Position) ? "Unspecified" : applicant.Position;
             var profile = BuildApplicantProfile(applicant);
 
-            var scoreResult = await scoringService.ScoreApplicantAsync(position, profile, cancellationToken);
+            var scoreResult = await scoringService.ScoreApplicantAsync(
+                position, 
+                profile, 
+                applicant.Skills,
+                applicant.Experience,
+                cancellationToken);
 
-            analyticsContext.Predictions.Add(new Prediction
+            // Upsert logic: check if prediction exists for this applicant
+            var existing = await analyticsContext.Predictions
+                .FirstOrDefaultAsync(p => p.CandidateId == applicantId.ToString(), cancellationToken);
+
+            if (existing != null)
             {
-                CandidateId = applicantId.ToString(),
-                MatchScore = scoreResult.MatchScore,
-                ScreeningResult = scoreResult.ScreeningResult,
-                ModelVersion = scoreResult.ModelVersion,
-                CreatedAt = DateTime.UtcNow
-            });
+                // Update existing prediction
+                existing.MatchScore = scoreResult.MatchScore;
+                existing.ScreeningResult = scoreResult.ScreeningResult;
+                existing.ModelVersion = scoreResult.ModelVersion;
+                existing.CreatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                // Add new prediction
+                analyticsContext.Predictions.Add(new Prediction
+                {
+                    CandidateId = applicantId.ToString(),
+                    MatchScore = scoreResult.MatchScore,
+                    ScreeningResult = scoreResult.ScreeningResult,
+                    ModelVersion = scoreResult.ModelVersion,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
 
             await analyticsContext.SaveChangesAsync(cancellationToken);
 
@@ -96,6 +124,12 @@ namespace ApiHrm.Infrastructures.BackgroundServices
                 $"Name: {applicant.First_Name} {applicant.Last_Name}",
                 $"Applied Position: {applicant.Position}"
             };
+
+            if (!string.IsNullOrWhiteSpace(applicant.Skills))
+                parts.Add($"Skills: {applicant.Skills}");
+
+            if (!string.IsNullOrWhiteSpace(applicant.Experience))
+                parts.Add($"Experience: {applicant.Experience}");
 
             if (!string.IsNullOrWhiteSpace(applicant.Contact_Details))
                 parts.Add($"Cover Letter / Details: {applicant.Contact_Details}");

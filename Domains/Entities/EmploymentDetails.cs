@@ -37,6 +37,8 @@ namespace ApiHrm.Domains.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal BasePay { get; set; }
 
+        public DateOnly? ProbationaryEndDate { get; set; }
+
         // Navigation Property
         [ForeignKey("EmployeeId")]
         public virtual Employee Employee { get; set; }

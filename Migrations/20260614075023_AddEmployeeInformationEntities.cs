@@ -88,7 +88,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateOnly>(
                 name: "Application_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: false,
                 oldClrType: typeof(DateTime),
@@ -97,7 +97,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<DateOnly>(
                 name: "Expected_Start_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: false,
                 defaultValue: new DateOnly(1, 1, 1));
@@ -105,7 +105,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Hiring_Stage",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
@@ -113,7 +113,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<DateOnly>(
                 name: "Interview_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "date",
                 nullable: false,
                 defaultValue: new DateOnly(1, 1, 1));
@@ -121,7 +121,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "Medical_Document_Completed",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "boolean",
                 nullable: false,
                 defaultValue: false);
@@ -129,7 +129,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "NBI_Document_Completed",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "boolean",
                 nullable: false,
                 defaultValue: false);
@@ -137,7 +137,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Phone",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
@@ -145,7 +145,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Position",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
@@ -153,7 +153,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Source",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
@@ -161,7 +161,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "XRay_Document_Completed",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "boolean",
                 nullable: false,
                 defaultValue: false);
@@ -359,47 +359,47 @@ namespace api_hrm.Migrations
             migrationBuilder.DropColumn(
                 name: "Expected_Start_Date",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "Hiring_Stage",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "Interview_Date",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "Medical_Document_Completed",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "NBI_Document_Completed",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "Phone",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "Position",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "Source",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.DropColumn(
                 name: "XRay_Document_Completed",
                 schema: "public",
-                table: "r_Apllicant_Records");
+                table: "r_Applicant_Records");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "Hire_Date",
@@ -413,7 +413,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<DateTime>(
                 name: "Application_Date",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "timestamp without time zone",
                 nullable: false,
                 oldClrType: typeof(DateOnly),

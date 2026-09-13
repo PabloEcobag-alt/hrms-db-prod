@@ -13,7 +13,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Resume_URL",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: true,
                 oldClrType: typeof(string),
@@ -26,7 +26,7 @@ namespace api_hrm.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Resume_URL",
                 schema: "public",
-                table: "r_Apllicant_Records",
+                table: "r_Applicant_Records",
                 type: "text",
                 nullable: false,
                 defaultValue: "",

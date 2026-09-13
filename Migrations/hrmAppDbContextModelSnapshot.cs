@@ -37,13 +37,24 @@ namespace api_hrm.Migrations
                     b.Property<string>("Contact_Details")
                         .HasColumnType("text");
 
+                    b.Property<DateOnly?>("Date_Of_Birth")
+                        .HasColumnType("date");
+
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateOnly?>("Expected_Start_Date")
                         .HasColumnType("date");
 
+                    b.Property<string>("Experience")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Extension_Name")
+                        .HasColumnType("text");
+
                     b.Property<string>("First_Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Hiring_Stage")
@@ -53,11 +64,22 @@ namespace api_hrm.Migrations
                     b.Property<DateOnly?>("Interview_Date")
                         .HasColumnType("date");
 
+                    b.Property<string>("Interview_Notes")
+                        .HasColumnType("text");
+
                     b.Property<string>("Last_Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("Medical_Document_Completed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Middle_Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Mobile")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<bool>("NBI_Document_Completed")
                         .HasColumnType("boolean");
@@ -65,14 +87,17 @@ namespace api_hrm.Migrations
                     b.Property<string>("Payment_Method")
                         .HasColumnType("text");
 
-                    b.Property<string>("Phone")
+                    b.Property<string>("Position")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Position")
-                        .HasColumnType("text");
+                    b.Property<DateOnly?>("Probationary_End_Date")
+                        .HasColumnType("date");
 
                     b.Property<string>("Resume_URL")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Skills")
                         .HasColumnType("text");
 
                     b.Property<string>("Source")
@@ -88,7 +113,7 @@ namespace api_hrm.Migrations
 
                     b.HasKey("Applicant_ID");
 
-                    b.ToTable("r_Apllicant_Records", "public");
+                    b.ToTable("r_Applicant_Records", "public");
                 });
 
             modelBuilder.Entity("ApiHrm.Domains.Entities.AttendanceLog", b =>
@@ -143,11 +168,25 @@ namespace api_hrm.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Ip_Address")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Module")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Operation")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -216,6 +255,9 @@ namespace api_hrm.Migrations
 
                     b.Property<decimal>("Amount_Requested")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Employee_Id")
                         .HasColumnType("integer");
@@ -594,7 +636,7 @@ namespace api_hrm.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
-                    b.Property<DateOnly>("Expiry_Date")
+                    b.Property<DateOnly?>("Expiry_Date")
                         .HasColumnType("date");
 
                     b.Property<string>("FileUrl")
@@ -794,6 +836,9 @@ namespace api_hrm.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateOnly?>("ProbationaryEndDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("SalaryGrade")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -931,6 +976,9 @@ namespace api_hrm.Migrations
                         .HasColumnName("leave_request_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Employee_Id")
                         .HasColumnType("integer");
@@ -1416,7 +1464,7 @@ namespace api_hrm.Migrations
                     b.HasOne("ApiHrm.Domains.Entities.Employee", "Employee")
                         .WithMany("EmployeeDocuments")
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
