@@ -9,7 +9,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/attendance")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "AttendanceCanRead")]
     public class AttendanceController : ControllerBase
     {
         private readonly IAttendanceService _attendanceService;
@@ -43,7 +43,7 @@ namespace ApiHrm.Controllers
         /// Restricted to users with the HR role.
         /// </summary>
         [HttpPost("override")]
-        [Authorize(Roles = "HR")]
+        [Authorize(Policy = "AttendanceCanWrite")]
         public async Task<ActionResult<AttendanceLogReadDto>> Override(
             [FromBody] AttendanceOverrideDto dto)
         {

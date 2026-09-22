@@ -7,6 +7,7 @@ namespace Applications.Interfaces
     /// </summary>
     public interface IAnalyticsService
     {
+        Task<HrmsDashboardSummaryDto> GetHrmsDashboardSummaryAsync(CancellationToken cancellationToken = default);
         Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default);
         Task<ScoreDistributionDto> GetScoreDistributionAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<TopCandidateDto>> GetTopCandidatesAsync(int count, CancellationToken cancellationToken = default);

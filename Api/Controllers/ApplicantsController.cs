@@ -11,7 +11,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "RecruitmentAndHiringCanRead")]
     public class ApplicantsController : ControllerBase
     {
         private readonly IApplicantService _applicantService;
@@ -39,19 +39,27 @@ namespace ApiHrm.Controllers
         [HttpPost("hire")] // URL is now: api/applicants/hire
         public async Task<ActionResult<EmployeeReadDto>> Hire([FromBody] HireApplicantDto dto)
         {
-            var command = new HireApplicantCommand
+            try
             {
-                ApplicantId = dto.ApplicantId,
-                StartDate = dto.StartDate,
-                ProbationaryEndDate = dto.ProbationaryEndDate,
-                HiringStage = dto.HiringStage
-            };
-
-            var employee = await _mediator.Send(command);
-            
-            if (employee == null) return NotFound("Applicant not found");
-
-            return Ok(employee);
+                var command = new HireApplicantCommand 
+                { 
+                    ApplicantId = dto.ApplicantId, 
+                    StartDate = dto.StartDate, 
+                    ProbationaryEndDate = dto.ProbationaryEndDate,
+                    HiringStage = dto.HiringStage
+                };
+                var result = await _mediator.Send(command);
+                if (result == null) return NotFound("Applicant not found");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Explicitly surface the backend crash to the React frontend
+                return BadRequest(new { 
+                    message = ex.Message, 
+                    details = ex.InnerException?.Message 
+                });
+            }
         }
 
         [HttpPost("ecommerce-application")]
@@ -75,11 +83,16 @@ namespace ApiHrm.Controllers
         [HttpPatch("{id}")]
         public async Task<ActionResult<ApplicantReadDto>> Update(int id, [FromBody] ApplicantUpdateDto updateDto)
         {
-            var applicant = await _applicantService.UpdateApplicantAsync(id, updateDto);
-            
-            if (applicant == null) return NotFound("Applicant not found");
-
-            return Ok(applicant);
+            try 
+            {
+                var applicant = await _applicantService.UpdateApplicantAsync(id, updateDto);
+                if (applicant == null) return NotFound("Applicant not found");
+                return Ok(applicant);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("{id}/transform")]

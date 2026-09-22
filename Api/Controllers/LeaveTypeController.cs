@@ -9,7 +9,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/leave-types")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "LeaveTypeCanRead")]
     public class LeaveTypeController : ControllerBase
     {
         private readonly hrmAppDbContext _context;

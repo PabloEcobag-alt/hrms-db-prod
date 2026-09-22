@@ -25,6 +25,39 @@ namespace Applications.Services
             _logger = logger;
         }
 
+        public async Task<HrmsDashboardSummaryDto> GetHrmsDashboardSummaryAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var totalEmployees = await _hrmContext.Employees.CountAsync(cancellationToken);
+                var regularEmployees = await _hrmContext.Employees.CountAsync(e => e.Status == "Regular", cancellationToken);
+                
+                var totalApplicants = await _hrmContext.Applicants.CountAsync(cancellationToken);
+                var activeApplicants = await _hrmContext.Applicants.CountAsync(a => a.Hiring_Stage != "Hired" && a.Hiring_Stage != "Failed", cancellationToken);
+                
+                var totalAttendanceRecords = await _hrmContext.AttendanceLogs.CountAsync(cancellationToken);
+                var onTimeCount = await _hrmContext.AttendanceLogs.CountAsync(a => a.Status == "On Time", cancellationToken);
+                
+                var totalPayroll = await _hrmContext.EmployeePayrollRecords.SumAsync(p => p.Net_Pay, cancellationToken);
+                
+                return new HrmsDashboardSummaryDto
+                {
+                    TotalEmployees = totalEmployees,
+                    RegularEmployees = regularEmployees,
+                    TotalApplicants = totalApplicants,
+                    ActiveApplicants = activeApplicants,
+                    TotalAttendanceRecords = totalAttendanceRecords,
+                    OnTimeCount = onTimeCount,
+                    TotalPayroll = totalPayroll
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching HRMS dashboard summary");
+                return new HrmsDashboardSummaryDto();
+            }
+        }
+
         public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
         {
             try

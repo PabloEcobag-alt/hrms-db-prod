@@ -14,6 +14,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Api.OpenApi;
 using Api.Contracts;
+using Microsoft.AspNetCore.Authorization;
+using api_hrm.Authorization;
 
 // Npgsql 6+ requires DateTimeKind.Utc for timestamptz columns.
 // This switch restores legacy behavior so DateTime values from JSON
@@ -34,70 +36,92 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Progr
 // Configure CompanySettings
 builder.Services.Configure<CompanySettings>(builder.Configuration.GetSection("CompanySettings"));
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"];
-var issuer = jwtSettings["Issuer"];
-var audience = jwtSettings["Audience"];
-var cookieName = jwtSettings["CookieName"] ?? "erp_access_token";
-var validateAudience = jwtSettings.GetValue<bool>("ValidateAudience", true);
+var webHrmsUrl = Environment.GetEnvironmentVariable("WEB_HRMS_URL")
+    ?? "https://localhost:3001";
+var jwtAuthority = Environment.GetEnvironmentVariable("JWT_AUTHORITY")
+    ?? "https://localhost:5001";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? "hrms-client";
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(webHrmsUrl)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://host.docker.internal:5001/";
-        options.RequireHttpsMetadata = false;
-        options.BackchannelHttpHandler = new HostHeaderHandler
-        {
-            InnerHandler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            }
-        };
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = validateAudience,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = issuer,
-            ValidAudience = audience,
-            ClockSkew = TimeSpan.Zero
-        };
-
-        options.RefreshOnIssuerKeyNotFound = true;
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var authorization = context.Request.Headers["Authorization"].ToString();
-                if (!string.IsNullOrEmpty(authorization))
-                {
-                    return Task.CompletedTask;
-                }
-
-                if (context.Request.Cookies.TryGetValue(cookieName, out var token) && !string.IsNullOrEmpty(token))
-                {
-                    context.Token = token;
-                }
-                return Task.CompletedTask;
-            }
-        };
+        options.Authority = jwtAuthority;
+        options.Audience = jwtAudience;
+        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+        // The current Auth Service does not issue resource audiences.
+        // Retain JWT_AUDIENCE for the future, but do not enable this yet.
+        options.TokenValidationParameters.ValidateAudience = false;
     });
+
+builder.Services.AddSingleton<IAuthorizationHandler, AppPermissionAuthorizationHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    void AddModulePolicy(string policyName, string moduleName, string action)
+    {
+        options.AddPolicy(policyName, policy =>
+        {
+            policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(new AppPermissionRequirement("HRMS", moduleName, action));
+        });
+    }
+
+    // ── canRead policies (all modules) ──
+    AddModulePolicy("AdminDigital201CanRead", "Admin Digital 201", "canRead");
+    AddModulePolicy("AnalyticsCanRead", "Analytics", "canRead");
+    AddModulePolicy("RecruitmentAndHiringCanRead", "Recruitment and Hiring", "canRead");
+    AddModulePolicy("AttendanceCanRead", "Attendance", "canRead");
+    AddModulePolicy("CashAdvanceCanRead", "Cash Advance", "canRead");
+    AddModulePolicy("ChecklistCanRead", "Checklist", "canRead");
+    AddModulePolicy("Digital201CanRead", "Digital 201", "canRead");
+    AddModulePolicy("DocumentCanRead", "Document", "canRead");
+    AddModulePolicy("EmployeeInformationCanRead", "Employee Information", "canRead");
+    AddModulePolicy("ExitCanRead", "Exit", "canRead");
+    AddModulePolicy("LeaveCanRead", "Leave", "canRead");
+    AddModulePolicy("LeaveTypeCanRead", "Leave Type", "canRead");
+    AddModulePolicy("PayrollCanRead", "Payroll", "canRead");
+    AddModulePolicy("RoleCanRead", "Role", "canRead");
+
+    // ── Employee Information action policies ──
+    AddModulePolicy("EmployeeInformationCanWrite", "Employee Information", "canWrite");
+    AddModulePolicy("EmployeeInformationCanUpdate", "Employee Information", "canUpdate");
+
+    // ── Attendance action policies ──
+    AddModulePolicy("AttendanceCanWrite", "Attendance", "canWrite");
+
+    // ── Cash Advance action policies ──
+    AddModulePolicy("CashAdvanceCanApprove", "Cash Advance", "canApprove");
+
+    // ── Document action policies ──
+    AddModulePolicy("DocumentCanWrite", "Document", "canWrite");
+    AddModulePolicy("DocumentCanDelete", "Document", "canDelete");
+    AddModulePolicy("DocumentCanApprove", "Document", "canApprove");
+
+    // ── Leave action policies ──
+    AddModulePolicy("LeaveCanApprove", "Leave", "canApprove");
+
+    // ── Payroll action policies ──
+    AddModulePolicy("PayrollCanWrite", "Payroll", "canWrite");
+    AddModulePolicy("PayrollCanApprove", "Payroll", "canApprove");
+    AddModulePolicy("PayrollCanExport", "Payroll", "canExport");
+    AddModulePolicy("PayrollCanDelete", "Payroll", "canDelete");
+});
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("FrontendUI", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3002", "http://localhost:3004", "http://localhost:3006")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
-});
 
 // Database connection string from Environment variables (Docker deployment)
 var connectionString =
@@ -145,6 +169,11 @@ builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IPayrollComputationService, PayrollComputationService>();
 builder.Services.AddScoped<IPayslipGeneratorService, PayslipGeneratorService>();
 builder.Services.AddScoped<IDigital201Service, Digital201Service>();
+builder.Services.AddHttpClient<IAuthServiceClient, ApiHrm.Infrastructures.Services.AuthServiceClient>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
 
 // ===================================================================
 // AI Applicant Scoring Pipeline (ARAE Deliverable 1)
@@ -221,8 +250,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("FrontendUI");
-
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -236,8 +264,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var dbContext = services.GetRequiredService<hrmAppDbContext>();
-        // Auto-migration disabled - database schema is already correct
-        // await dbContext.Database.MigrateAsync();
+        await dbContext.Database.MigrateAsync();
 
         // Seed Statutory Data
         await StatutoryDataSeeder.SeedStatutoryDataAsync(dbContext);
@@ -275,18 +302,4 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
-public class HostHeaderHandler : DelegatingHandler
-{
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        if (request.RequestUri != null && request.RequestUri.Host == "localhost")
-        {
-            var builder = new UriBuilder(request.RequestUri);
-            builder.Host = "host.docker.internal";
-            request.RequestUri = builder.Uri;
-        }
 
-        request.Headers.Host = "localhost:5001";
-        return base.SendAsync(request, cancellationToken);
-    }
-}

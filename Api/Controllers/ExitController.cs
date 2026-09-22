@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "ExitCanRead")]
     public class ExitsController : ControllerBase
     {
         private readonly IExitService _exitService;

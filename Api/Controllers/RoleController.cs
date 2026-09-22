@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "RoleCanRead")]
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;

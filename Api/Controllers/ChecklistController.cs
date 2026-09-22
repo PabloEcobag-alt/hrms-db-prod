@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "ChecklistCanRead")]
     public class ChecklistsController : ControllerBase
     {
         private readonly IChecklistService _checklistService;

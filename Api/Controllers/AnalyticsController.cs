@@ -7,16 +7,50 @@ namespace ApiHrm.Controllers
 {
     [Route("api/hrms/analytics")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "AnalyticsCanRead")]
     public class AnalyticsController : ControllerBase
     {
         private readonly IAnalyticsService _analyticsService;
         private readonly ILogger<AnalyticsController> _logger;
+        private readonly ApiHrm.Infrastructures.Persistence.hrmAppDbContext _context;
 
-        public AnalyticsController(IAnalyticsService analyticsService, ILogger<AnalyticsController> logger)
+        public AnalyticsController(IAnalyticsService analyticsService, ILogger<AnalyticsController> logger, ApiHrm.Infrastructures.Persistence.hrmAppDbContext context)
         {
             _analyticsService = analyticsService;
             _logger = logger;
+            _context = context;
+        }
+
+        [HttpGet("hrms-summary")]
+        [Authorize(Policy = "AnalyticsCanRead")]
+        public async Task<ActionResult<object>> GetHrmsDashboardSummary(CancellationToken cancellationToken)
+        {
+            try
+            {
+                // Filter out soft-deleted employees
+                var totalEmployees = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(_context.Employees, e => e.Status == "Active", cancellationToken);
+                var regularEmployees = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(_context.EmploymentDetails, e => e.EmploymentStatus == "Regular", cancellationToken);
+
+                var totalApplicants = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(_context.Applicants, cancellationToken);
+                var activeApplicants = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(_context.Applicants, a => a.Hiring_Stage != "Hired" && a.Hiring_Stage != "Failed", cancellationToken);
+
+                // Return an anonymous object; ASP.NET Core automatically serializes to camelCase JSON
+                return Ok(new
+                {
+                    totalEmployees,
+                    regularEmployees,
+                    totalApplicants,
+                    activeApplicants,
+                    onTimeCount = 0,
+                    totalAttendanceRecords = 0,
+                    totalPayroll = 0
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Database unavailable for HRMS dashboard summary; returning empty state");
+                return Ok(new HrmsDashboardSummaryDto());
+            }
         }
 
         [HttpGet("dashboard")]

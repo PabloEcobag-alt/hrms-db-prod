@@ -3,17 +3,20 @@ using System;
 using ApiHrm.Infrastructures.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace api_hrm.Migrations
+namespace api_hrm.Infrastructures.Persistence.Migrations
 {
     [DbContext(typeof(hrmAppDbContext))]
-    partial class hrmAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260913194341_AddExperienceToApplicant")]
+    partial class AddExperienceToApplicant
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -837,8 +840,7 @@ namespace api_hrm.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<DateOnly?>("ProbationaryEndDate")
-                        .HasColumnType("date")
-                        .HasColumnName("Probationary_End_Date");
+                        .HasColumnType("date");
 
                     b.Property<string>("SalaryGrade")
                         .HasMaxLength(20)

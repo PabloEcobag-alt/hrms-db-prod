@@ -19,8 +19,6 @@ namespace Applications.Handlers
             
             // Future integration points:
             // - Send welcome email to employee
-            // - Create user account in ms-authentication
-            // - Set up ABAC permissions based on role
             // - Notify payroll system for onboarding
             // - Update ERP system records
             

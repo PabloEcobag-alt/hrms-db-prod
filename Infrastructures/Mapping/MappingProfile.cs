@@ -17,7 +17,8 @@ namespace ApiHrm.Infrastructures.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<Employee, EmployeeDetailDto>();
+            CreateMap<Employee, EmployeeDetailDto>()
+                .ForMember(dest => dest.Employee_Id, opt => opt.MapFrom(src => src.EmployeeId));
             CreateMap<ApplicantCreateDto, Applicant>()
                 .ForMember(dest => dest.Hiring_Stage,
                     opt => opt.MapFrom(src => src.hiringStage))
@@ -54,11 +55,23 @@ namespace ApiHrm.Infrastructures.Mapping
                 .ForMember(dest => dest.Ai_Match_Score,
                 opt => opt.MapFrom(src => (double?)null))
                 .ForMember(dest => dest.Screening_Result,
-                opt => opt.MapFrom(src => "Pending"));
+                opt => opt.MapFrom(src => "Pending"))
+                .ForMember(dest => dest.Checklist,
+                opt => opt.MapFrom(src => src.Checklists != null && src.Checklists.Any() ? new ChecklistDto 
+                {
+                    Has_NBI = src.Checklists.First().Has_NBI,
+                    Has_Medical = src.Checklists.First().Has_Medical,
+                    Has_Xray = src.Checklists.First().Has_Xray,
+                    has_SSS = src.Checklists.First().has_SSS,
+                    has_PAGIBIG = src.Checklists.First().has_PAGIBIG,
+                    has_PhilHealth = src.Checklists.First().has_PhilHealth,
+                    has_TIN = src.Checklists.First().has_TIN
+                } : null));
 
             CreateMap<DocumentCreateDto, Document>();
             CreateMap<Employee, EmployeeReadDto>()
                 .MaxDepth(3)
+                .ForMember(dest => dest.Employee_Id, opt => opt.MapFrom(src => src.EmployeeId))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.role != null ? src.role.Role_Description : ""))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))

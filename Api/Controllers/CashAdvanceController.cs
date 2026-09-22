@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/cash-advances")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "CashAdvanceCanRead")]
     public class CashAdvanceController : ControllerBase
     {
         private readonly ICashAdvanceService _cashAdvanceService;
@@ -42,7 +42,7 @@ namespace ApiHrm.Controllers
         /// Restricted to HR and Manager roles.
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "HR,Manager")]
+        [Authorize(Policy = "CashAdvanceCanApprove")]
         public async Task<ActionResult<IEnumerable<CashAdvanceReadDto>>> GetAll()
         {
             try

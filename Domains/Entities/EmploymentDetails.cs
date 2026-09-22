@@ -37,6 +37,7 @@ namespace ApiHrm.Domains.Entities
         [Column(TypeName = "decimal(18,2)")]
         public decimal BasePay { get; set; }
 
+        [Column("Probationary_End_Date")]
         public DateOnly? ProbationaryEndDate { get; set; }
 
         // Navigation Property

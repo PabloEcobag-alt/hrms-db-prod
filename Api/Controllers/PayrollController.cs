@@ -11,7 +11,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/payroll")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "PayrollCanRead")]
     public class PayrollController : ControllerBase
     {
         private readonly IPayrollComputationService _payrollComputationService;
@@ -36,7 +36,7 @@ namespace ApiHrm.Controllers
         /// Returns a full breakdown (basic pay, OT, deductions, net pay) without persisting anything.
         /// </summary>
         [HttpGet("compute/{payrollRunId}/employee/{employeeId}")]
-        [Authorize(Roles = "Admin,SystemAdmin,Manager,HR,HRAdmin")]
+        [Authorize(Policy = "PayrollCanRead")]
         public async Task<ActionResult<PayrollComputeResultDto>> Compute(
             [FromRoute] int payrollRunId,
             [FromRoute] int employeeId)
@@ -70,7 +70,7 @@ namespace ApiHrm.Controllers
         /// Rejects requests if the run is already finalized.
         /// </summary>
         [HttpPost("bonus")]
-        [Authorize(Roles = "Admin,SystemAdmin,Manager,HR,HRAdmin")]
+        [Authorize(Policy = "PayrollCanWrite")]
         public async Task<ActionResult> AddBonus([FromBody] BonusRequestDto dto)
         {
             try
@@ -128,7 +128,7 @@ namespace ApiHrm.Controllers
         /// generates PayoutSummary by PaymentMethod, and updates PayrollRun status.
         /// </summary>
         [HttpPost("finalize")]
-        [Authorize(Roles = "Admin,SystemAdmin,HRAdmin")]
+        [Authorize(Policy = "PayrollCanApprove")]
         public async Task<ActionResult> Finalize([FromBody] FinalizeRequestDto dto)
         {
             try
@@ -269,7 +269,7 @@ namespace ApiHrm.Controllers
         /// Restricted to SystemAdmin and Manager roles.
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin,SystemAdmin,Manager,HR,HRAdmin")]
+        [Authorize(Policy = "PayrollCanExport")]
         public async Task<ActionResult<IEnumerable<PayrollRunListItemDto>>> GetPayrollRuns()
         {
             try
@@ -311,7 +311,7 @@ namespace ApiHrm.Controllers
         /// Restricted to HRAdmin role.
         /// </summary>
         [HttpPut("{payrollId}/disburse")]
-        [Authorize(Roles = "Admin,HRAdmin")]
+        [Authorize(Policy = "PayrollCanDelete")]
         public async Task<ActionResult> Disburse(
             [FromRoute] int payrollId,
             [FromBody] DisbursePayrollDto dto)
@@ -341,7 +341,7 @@ namespace ApiHrm.Controllers
         /// Restricted to authenticated users.
         /// </summary>
         [HttpGet("payslip/download/{payrollRunId}/{employeeId}")]
-        [Authorize]
+        [Authorize(Policy = "PayrollCanRead")]
         public async Task<IActionResult> DownloadPayslip(
             [FromRoute] int payrollRunId,
             [FromRoute] int employeeId)

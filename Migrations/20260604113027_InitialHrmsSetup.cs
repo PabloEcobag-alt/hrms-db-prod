@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -16,7 +16,7 @@ namespace api_hrm.Migrations
                 name: "public");
 
             migrationBuilder.CreateTable(
-                name: "r_Apllicant_Records",
+                name: "r_Applicant_Records",
                 schema: "public",
                 columns: table => new
                 {
@@ -88,7 +88,7 @@ namespace api_hrm.Migrations
                         name: "FK_r_Checklist_r_Apllicant_Records_Applicant_ID",
                         column: x => x.Applicant_ID,
                         principalSchema: "public",
-                        principalTable: "r_Apllicant_Records",
+                        principalTable: "r_Applicant_Records",
                         principalColumn: "Applicant_ID",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -142,7 +142,7 @@ namespace api_hrm.Migrations
                         name: "FK_r_Document_r_Apllicant_Records_Applicant_ID",
                         column: x => x.Applicant_ID,
                         principalSchema: "public",
-                        principalTable: "r_Apllicant_Records",
+                        principalTable: "r_Applicant_Records",
                         principalColumn: "Applicant_ID",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
@@ -311,7 +311,7 @@ namespace api_hrm.Migrations
                 schema: "public");
 
             migrationBuilder.DropTable(
-                name: "r_Apllicant_Records",
+                name: "r_Applicant_Records",
                 schema: "public");
 
             migrationBuilder.DropTable(

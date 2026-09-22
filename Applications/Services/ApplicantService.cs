@@ -8,6 +8,7 @@ using Api.Contracts.Employee;
 using Api.Contracts.Checklist;
 using Applications.Interfaces;
 using Applications.Commands;
+using PhoneNumbers;
 
 namespace Applications.Services
 {
@@ -37,7 +38,7 @@ namespace Applications.Services
         {
             try
             {
-                var applicants = await _context.Applicants.ToListAsync();
+                var applicants = await _context.Applicants.Include(a => a.Checklists).ToListAsync();
                 return _mapper.Map<IEnumerable<ApplicantReadDto>>(applicants);
             }
             catch (Exception ex)
@@ -137,9 +138,10 @@ namespace Applications.Services
             _scoringQueue.Writer.TryWrite(applicant.Applicant_ID);
 
             var result = await _context.Applicants
+            .Include(a => a.Checklists)
             .FirstOrDefaultAsync(a => a.Applicant_ID == applicant.Applicant_ID);
 
-            return _mapper.Map<ApplicantReadDto>(applicant);
+            return _mapper.Map<ApplicantReadDto>(result);
         }
 
         public async Task<bool> UpdateApplicantStatusAsync(int id, string status)
@@ -303,9 +305,10 @@ namespace Applications.Services
             _scoringQueue.Writer.TryWrite(applicant.Applicant_ID);
 
             var result = await _context.Applicants
+                .Include(a => a.Checklists)
                 .FirstOrDefaultAsync(a => a.Applicant_ID == applicant.Applicant_ID);
 
-            return _mapper.Map<ApplicantReadDto>(applicant);
+            return _mapper.Map<ApplicantReadDto>(result);
         }
 
         public async Task<ApplicantReadDto?> GetRecentEcommerceApplicantAsync()
@@ -323,10 +326,21 @@ namespace Applications.Services
 
         public async Task<ApplicantReadDto?> UpdateApplicantAsync(int id, ApplicantUpdateDto updateDto)
         {
-            var applicant = await _context.Applicants.FindAsync(id);
+            var applicant = await _context.Applicants
+                .Include(a => a.Checklists)
+                .FirstOrDefaultAsync(a => a.Applicant_ID == id);
             
             if (applicant == null) return null;
 
+            if (updateDto.First_Name != null)
+                applicant.First_Name = updateDto.First_Name;
+            
+            if (updateDto.Middle_Name != null)
+                applicant.Middle_Name = updateDto.Middle_Name;
+            
+            if (updateDto.Last_Name != null)
+                applicant.Last_Name = updateDto.Last_Name;
+            
             if (updateDto.Hiring_Stage != null)
                 applicant.Hiring_Stage = updateDto.Hiring_Stage;
             
@@ -346,7 +360,22 @@ namespace Applications.Services
                 applicant.Position = updateDto.Position;
             
             if (updateDto.Mobile != null)
-                applicant.Mobile = updateDto.Mobile;
+            {
+                var phoneUtil = PhoneNumberUtil.GetInstance();
+                try
+                {
+                    var parsedNumber = phoneUtil.Parse(updateDto.Mobile, "PH");
+                    if (!phoneUtil.IsValidNumber(parsedNumber))
+                    {
+                        throw new ArgumentException("Invalid phone number format.");
+                    }
+                    applicant.Mobile = updateDto.Mobile;
+                }
+                catch
+                {
+                    throw new ArgumentException("Invalid phone number format.");
+                }
+            }
             
             if (updateDto.Email != null)
                 applicant.Email = updateDto.Email;
@@ -354,9 +383,29 @@ namespace Applications.Services
             if (updateDto.Interview_Notes != null)
                 applicant.Interview_Notes = updateDto.Interview_Notes;
 
+            if (updateDto.Requirements != null)
+            {
+                var checklist = applicant.Checklists?.FirstOrDefault();
+                if (checklist == null)
+                {
+                    checklist = new Checklist { Applicant_ID = applicant.Applicant_ID };
+                    if (applicant.Checklists == null) applicant.Checklists = new List<Checklist>();
+                    applicant.Checklists.Add(checklist);
+                }
+
+                if (updateDto.Requirements.TryGetValue("nbi", out bool nbi)) checklist.Has_NBI = nbi;
+                if (updateDto.Requirements.TryGetValue("medical", out bool medical)) checklist.Has_Medical = medical;
+                if (updateDto.Requirements.TryGetValue("xray", out bool xray)) checklist.Has_Xray = xray;
+                if (updateDto.Requirements.TryGetValue("sss", out bool sss)) checklist.has_SSS = sss;
+                if (updateDto.Requirements.TryGetValue("pagibig", out bool pagibig)) checklist.has_PAGIBIG = pagibig;
+                if (updateDto.Requirements.TryGetValue("philhealth", out bool philhealth)) checklist.has_PhilHealth = philhealth;
+                if (updateDto.Requirements.TryGetValue("tin", out bool tin)) checklist.has_TIN = tin;
+            }
+
             await _context.SaveChangesAsync();
 
             var result = await _context.Applicants
+                .Include(a => a.Checklists)
                 .FirstOrDefaultAsync(a => a.Applicant_ID == id);
 
             return _mapper.Map<ApplicantReadDto>(result);

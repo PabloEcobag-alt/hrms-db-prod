@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = "EmployeeInformationCanRead")]
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
@@ -35,7 +35,7 @@ namespace ApiHrm.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "HR,HRAdmin")]
+        [Authorize(Policy = "EmployeeInformationCanWrite")]
         public async Task<ActionResult<EmployeeDto>> Create(EmployeeCreateDto createDto)
         {
             var result = await _employeeService.CreateEmployeeAsync(createDto);
@@ -43,7 +43,7 @@ namespace ApiHrm.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "HR,HRAdmin")]
+        [Authorize(Policy = "EmployeeInformationCanUpdate")]
         public async Task<ActionResult> Update(int id, EmployeeUpdateDto updateDto)
         {
             var success = await _employeeService.UpdateEmployeeProfileAsync(id, updateDto);
