@@ -57,16 +57,16 @@ namespace ApiHrm.Infrastructures.Mapping
                 .ForMember(dest => dest.Screening_Result,
                 opt => opt.MapFrom(src => "Pending"))
                 .ForMember(dest => dest.Checklist,
-                opt => opt.MapFrom(src => src.Checklists != null && src.Checklists.Any() ? new ChecklistDto 
+                opt => opt.MapFrom(src => src.Checklists != null && src.Checklists.Any() ? src.Checklists.Select(c => new ChecklistDto 
                 {
-                    Has_NBI = src.Checklists.First().Has_NBI,
-                    Has_Medical = src.Checklists.First().Has_Medical,
-                    Has_Xray = src.Checklists.First().Has_Xray,
-                    has_SSS = src.Checklists.First().has_SSS,
-                    has_PAGIBIG = src.Checklists.First().has_PAGIBIG,
-                    has_PhilHealth = src.Checklists.First().has_PhilHealth,
-                    has_TIN = src.Checklists.First().has_TIN
-                } : null));
+                    Has_NBI = c.Has_NBI,
+                    Has_Medical = c.Has_Medical,
+                    Has_Xray = c.Has_Xray,
+                    has_SSS = c.has_SSS,
+                    has_PAGIBIG = c.has_PAGIBIG,
+                    has_PhilHealth = c.has_PhilHealth,
+                    has_TIN = c.has_TIN
+                }).FirstOrDefault() : null));
 
             CreateMap<DocumentCreateDto, Document>();
             CreateMap<Employee, EmployeeReadDto>()
