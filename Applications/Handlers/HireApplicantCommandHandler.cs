@@ -92,7 +92,7 @@ namespace Applications.Handlers
                     }
                 };
                 
-                string authUserId;
+                string? authUserId = null;
                 try
                 {
                     authUserId = await _authServiceClient.ProvisionUserAsync(createUserRequest);
@@ -102,6 +102,7 @@ namespace Applications.Handlers
                     _logger.LogError(ex, "Auth provisioning failed for applicant {ApplicantId}", request.ApplicantId);
                     throw new InvalidOperationException($"Auth Provisioning Failed: {ex.Message}", ex);
                 }
+                
                 newEmployee.ErpUserId = authUserId;
 
                 _context.Employees.Add(newEmployee);
@@ -133,14 +134,17 @@ namespace Applications.Handlers
                 };
                 _context.EmploymentDetails.Add(employmentDetails);
 
-                // Update applicant's hiring stage to match payload
+                // Update applicant's hiring stage and status to match payload
                 applicant.Hiring_Stage = request.HiringStage;
+                applicant.Status = request.HiringStage == "Hired" ? "Regular" : request.HiringStage;
                 applicant.Expected_Start_Date = DateOnly.FromDateTime(request.StartDate);
                 if (request.ProbationaryEndDate.HasValue)
                 {
                     applicant.Probationary_End_Date = DateOnly.FromDateTime(request.ProbationaryEndDate.Value);
                 }
                 
+                _context.Applicants.Update(applicant);
+
                 await _context.SaveChangesAsync(cancellationToken);
 
                 await _context.Entry(newEmployee).Reference(e => e.role).LoadAsync(cancellationToken);

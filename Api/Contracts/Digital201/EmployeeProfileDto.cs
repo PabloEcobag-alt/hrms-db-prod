@@ -43,5 +43,35 @@ namespace Api.Contracts.Digital201
         public string CheckedBy { get; set; } = string.Empty;
         public string CheckedDate { get; set; } = string.Empty;
         public string Remarks { get; set; } = string.Empty;
+
+        public List<EmployeeDocumentDto> Documents { get; set; } = new List<EmployeeDocumentDto>();
+        public List<EmployeeJourneyDto> Journey { get; set; } = new List<EmployeeJourneyDto>();
+        public List<EmployeeAuditLogDto> AuditLogs { get; set; } = new List<EmployeeAuditLogDto>();
+    }
+
+    public class EmployeeDocumentDto
+    {
+        public string DocumentName { get; set; } = string.Empty;
+        public string DocumentType { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string VerificationStatus { get; set; } = string.Empty;
+        public string UploadDate { get; set; } = string.Empty;
+        public string ExpiryDate { get; set; } = string.Empty;
+    }
+
+    public class EmployeeJourneyDto
+    {
+        public string Date { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+    }
+
+    public class EmployeeAuditLogDto
+    {
+        public string Date { get; set; } = string.Empty;
+        public string User { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public string Details { get; set; } = string.Empty;
     }
 }

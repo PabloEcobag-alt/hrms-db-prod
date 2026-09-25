@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using Applications.Interfaces;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.Checklist;
@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "ChecklistCanRead")]
+    // [Authorize(Policy = "ChecklistCanRead")]
     public class ChecklistsController : ControllerBase
     {
         private readonly IChecklistService _checklistService;

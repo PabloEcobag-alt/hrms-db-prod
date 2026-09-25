@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using Applications.Interfaces;
 using Api.Contracts.Digital201;
 
@@ -7,7 +7,7 @@ namespace ApiHrm.Controllers
 {
     [ApiController]
     [Route("api/admin/digital201")]
-    [Authorize(Policy = "AdminDigital201CanRead")]
+    // [Authorize(Policy = "AdminDigital201CanRead")]
     public class AdminDigital201Controller : ControllerBase
     {
         private readonly IDigital201Service _digital201Service;

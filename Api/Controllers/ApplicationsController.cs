@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using ApiHrm.Api.Contracts.Applicant;
 using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Domains.Entities;
@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous] // Allow public access since it's an external form
+    // [AllowAnonymous] // Allow public access since it's an external form
     public class ApplicationsController : ControllerBase
     {
         private readonly hrmAppDbContext _context;

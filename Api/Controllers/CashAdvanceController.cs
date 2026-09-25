@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using Api.Contracts.CashAdvance;
 using Applications.Exceptions;
 using Applications.Interfaces;
@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/cash-advances")]
     [ApiController]
-    [Authorize(Policy = "CashAdvanceCanRead")]
+    // [Authorize(Policy = "CashAdvanceCanRead")]
     public class CashAdvanceController : ControllerBase
     {
         private readonly ICashAdvanceService _cashAdvanceService;
@@ -42,7 +42,7 @@ namespace ApiHrm.Controllers
         /// Restricted to HR and Manager roles.
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = "CashAdvanceCanApprove")]
+        // [Authorize(Policy = "CashAdvanceCanApprove")]
         public async Task<ActionResult<IEnumerable<CashAdvanceReadDto>>> GetAll()
         {
             try

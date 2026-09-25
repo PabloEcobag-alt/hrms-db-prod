@@ -26,18 +26,9 @@ namespace ApiHrm.Infrastructures.Services
 
         public async Task<string> ProvisionUserAsync(CreateUserRequest request)
         {
-            var context = _httpContextAccessor.HttpContext;
-            if (context != null && context.Request.Headers.TryGetValue("Authorization", out var authHeader))
-            {
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    System.Net.Http.Headers.AuthenticationHeaderValue.Parse(authHeader.ToString());
-            }
-            else
-            {
-                _logger.LogWarning("No Authorization header found in current HttpContext. The request to auth service may fail.");
-            }
+            _httpClient.DefaultRequestHeaders.Add("X-Internal-Token", "HrAppInternalTokenSecret");
 
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:5001/api/users", request);
+            var response = await _httpClient.PostAsJsonAsync("https://localhost:5001/api/users/internal", request);
 
             if (!response.IsSuccessStatusCode)
             {

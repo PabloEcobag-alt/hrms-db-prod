@@ -9,13 +9,13 @@ using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Infrastructures.Persistence.Seeders;
 using ApiHrm.Infrastructures.Persistence.Interceptors;
 using AutoMapper; // Temporarily re-enabled for migration
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+// using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Api.OpenApi;
 using Api.Contracts;
-using Microsoft.AspNetCore.Authorization;
-using api_hrm.Authorization;
+// using Microsoft.AspNetCore.Authorization;
+// using api_hrm.Authorization;
 
 // Npgsql 6+ requires DateTimeKind.Utc for timestamptz columns.
 // This switch restores legacy behavior so DateTime values from JSON
@@ -27,6 +27,19 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load ONLY OpenAI related variables from .env to avoid breaking the local Postgres connection
+if (System.IO.File.Exists(".env"))
+{
+    foreach (var line in System.IO.File.ReadAllLines(".env"))
+    {
+        if (line.StartsWith("OPENAI_API_KEY=") || line.StartsWith("SCORING_PROVIDER="))
+        {
+            var parts = line.Split('=', 2);
+            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+        }
+    }
+}
+
 builder.Services.AddAutoMapper(typeof(MappingProfile)); // Temporarily re-enabled for migration
 builder.Services.AddHttpContextAccessor();
 
@@ -36,6 +49,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Progr
 // Configure CompanySettings
 builder.Services.Configure<CompanySettings>(builder.Configuration.GetSection("CompanySettings"));
 
+/*
 var webHrmsUrl = Environment.GetEnvironmentVariable("WEB_HRMS_URL")
     ?? "https://localhost:3001";
 var jwtAuthority = Environment.GetEnvironmentVariable("JWT_AUTHORITY")
@@ -118,6 +132,22 @@ builder.Services.AddAuthorization(options =>
     AddModulePolicy("PayrollCanApprove", "Payroll", "canApprove");
     AddModulePolicy("PayrollCanExport", "Payroll", "canExport");
     AddModulePolicy("PayrollCanDelete", "Payroll", "canDelete");
+});
+*/
+
+var webHrmsUrls = Environment.GetEnvironmentVariable("WEB_HRMS_URL")?.Split(',') ?? new[] { "https://localhost:3001", "https://hrms-three-orpin.vercel.app", "https://deploy-web-hrms.vercel.app" };
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin => 
+                origin == "https://localhost:3001" || 
+                origin.EndsWith(".vercel.app"))
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
 });
 
 builder.Services.AddControllers();
@@ -234,6 +264,7 @@ builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -248,11 +279,22 @@ if (app.Environment.IsDevelopment())
 
 
 
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api/hrms", out var remaining))
+    {
+        context.Request.Path = "/api" + remaining;
+    }
+    await next();
+});
+
+app.UseRouting();
+
 app.UseHttpsRedirection();
 
 app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
+// app.UseAuthentication();
+// app.UseAuthorization();
 
 app.MapControllers();
 

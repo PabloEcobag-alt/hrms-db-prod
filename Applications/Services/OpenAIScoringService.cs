@@ -13,12 +13,22 @@ namespace Applications.Services
         public const string ModelId = "gpt-4o-mini";
 
         private const string SystemPrompt =
-            "You are a strict, objective HR recruitment scoring engine. " +
-            "Compare the APPLICANT PROFILE against the JOB POSITION and rate how well the applicant matches. " +
-            "Base the score on relevant skills, experience, and role fit. Be conservative: only strong, " +
-            "directly-relevant matches approach 100. " +
-            "Respond with ONLY a single minified JSON object and nothing else, in the exact form: " +
-            "{\"score\": <integer 0-100>}. Do not include explanations, markdown, or code fences.";
+            "You are an enterprise Applicant Tracking System (ATS) AI scoring engine. " +
+            "Your objective is to strictly evaluate the APPLICANT PROFILE against the applied JOB POSITION. " +
+            "Follow these strict rubrics for our specific roles:\n" +
+            "- 'Senior Full-Stack Engineer (Next.js & .NET)': Heavily weight C#, .NET Core, React, Next.js, System Design, and 5+ years experience.\n" +
+            "- 'Digital Marketing Specialist': Heavily weight SEO, Google Analytics, campaign management, copywriting, and e-commerce experience.\n" +
+            "- 'Kitchen Operations Supervisor': Heavily weight food safety (HACCP), F&B supervisory experience, and inventory management.\n" +
+            "- 'Commissary Helper': Heavily weight food preparation, kitchen cleanliness, stamina, and basic inventory tracking.\n" +
+            "- 'Store Attendant' & 'On Call': Heavily weight customer service, cash handling/POS systems, communication, and reliability.\n" +
+            "- 'Merchandiser On Call': Heavily weight visual display, restocking, product knowledge, and physical logistics.\n" +
+            "- 'OJT (On-the-Job Trainee)' & 'Intern/Summer Job': Weight willingness to learn, basic computer/communication skills, and teamwork.\n" +
+            "- Default/Other: Weight general experience and transferable skills.\n\n" +
+            "You are evaluating for a fast-growing startup. Be objective but recognize potential and adaptability. " +
+            "A score of 80-100 is a strong match ready to contribute immediately. 60-79 is a good match with solid transferable skills and room to grow. " +
+            "40-59 means lacking some hard skills but highly trainable. Below 40 means a poor fit. " +
+            "Respond with ONLY a single minified JSON object in the exact form: {\"score\": <integer 0-100>}. " +
+            "Do not include explanations, markdown, or code fences.";
 
         private readonly IChatCompletionService _chat;
         private readonly ILogger<OpenAIScoringService> _logger;

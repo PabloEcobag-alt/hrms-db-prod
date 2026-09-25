@@ -421,6 +421,7 @@ namespace Applications.Services
                 .Include(e => e.GovernmentId)
                 .Include(e => e.EmergencyContacts)
                 .Include(e => e.CompanyProperty)
+                .Include(e => e.EmployeeDocuments)
                 .Include(e => e.role)
                 .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
 
@@ -471,7 +472,33 @@ namespace Applications.Services
                 EquipmentIssued = "", // Not available in GovernmentId entity
                 CheckedBy = "", // Not available in GovernmentId entity
                 CheckedDate = "", // Not available in GovernmentId entity
-                Remarks = "" // Not available in GovernmentId entity
+                Remarks = "", // Not available in GovernmentId entity
+                
+                Documents = employee.EmployeeDocuments?.Select(d => new EmployeeDocumentDto
+                {
+                    DocumentName = d.DocumentName,
+                    DocumentType = d.DocumentType,
+                    FileUrl = d.FileUrl,
+                    Status = d.Status ?? "Uploaded",
+                    VerificationStatus = d.VerificationStatus ?? "Pending",
+                    UploadDate = d.UploadDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ExpiryDate = d.Expiry_Date.HasValue ? d.Expiry_Date.Value.ToString("yyyy-MM-dd") : ""
+                }).ToList() ?? new List<EmployeeDocumentDto>(),
+
+                Journey = _context.EmployeeHistories.Where(h => h.Employee_ID == employeeId).OrderByDescending(h => h.Changed_At).Select(h => new EmployeeJourneyDto
+                {
+                    Date = h.Changed_At.ToString("MMM dd, yyyy"),
+                    Title = h.Action_Type,
+                    Description = $"Changed by: {h.Changed_By} - {h.Old_Value} -> {h.New_Value}"
+                }).ToList(),
+
+                AuditLogs = _context.AuditLogs.Where(a => a.Record_Id == employeeId.ToString() && a.Module == "Employees").OrderByDescending(a => a.Timestamp).Select(a => new EmployeeAuditLogDto
+                {
+                    Date = a.Timestamp.ToString("MMM dd, yyyy HH:mm"),
+                    User = a.User_Role,
+                    Action = a.Action,
+                    Details = a.Operation
+                }).ToList()
             };
         }
 
@@ -508,6 +535,20 @@ namespace Applications.Services
                 var companyProperty = await _context.CompanyProperties
                     .FirstOrDefaultAsync(cp => cp.Employee_Id == employee.EmployeeId);
 
+                var employeeDocuments = await _context.EmployeeDocuments
+                    .Where(ed => ed.EmployeeId == employee.EmployeeId)
+                    .ToListAsync();
+                
+                var employeeHistories = await _context.EmployeeHistories
+                    .Where(eh => eh.Employee_ID == employee.EmployeeId)
+                    .OrderByDescending(eh => eh.Changed_At)
+                    .ToListAsync();
+                    
+                var auditLogs = await _context.AuditLogs
+                    .Where(a => a.Record_Id == employee.EmployeeId.ToString() && a.Module == "Employees")
+                    .OrderByDescending(a => a.Timestamp)
+                    .ToListAsync();
+
                 return new EmployeeProfileDto
                 {
                     EmployeeId = employee.EmployeeId,
@@ -541,7 +582,33 @@ namespace Applications.Services
                     EquipmentIssued = "", // Not available in GovernmentId entity
                     CheckedBy = "", // Not available in GovernmentId entity
                     CheckedDate = "", // Not available in GovernmentId entity
-                    Remarks = "" // Not available in GovernmentId entity
+                    Remarks = "", // Not available in GovernmentId entity
+                    
+                    Documents = employeeDocuments.Select(d => new EmployeeDocumentDto
+                    {
+                        DocumentName = d.DocumentName,
+                        DocumentType = d.DocumentType,
+                        FileUrl = d.FileUrl,
+                        Status = d.Status ?? "Uploaded",
+                        VerificationStatus = d.VerificationStatus ?? "Pending",
+                        UploadDate = d.UploadDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ExpiryDate = d.Expiry_Date.HasValue ? d.Expiry_Date.Value.ToString("yyyy-MM-dd") : ""
+                    }).ToList(),
+
+                    Journey = employeeHistories.Select(h => new EmployeeJourneyDto
+                    {
+                        Date = h.Changed_At.ToString("MMM dd, yyyy"),
+                        Title = h.Action_Type,
+                        Description = $"Changed by: {h.Changed_By} - {h.Old_Value} -> {h.New_Value}"
+                    }).ToList(),
+
+                    AuditLogs = auditLogs.Select(a => new EmployeeAuditLogDto
+                    {
+                        Date = a.Timestamp.ToString("MMM dd, yyyy HH:mm"),
+                        User = a.User_Role,
+                        Action = a.Action,
+                        Details = a.Operation
+                    }).ToList()
                 };
             }
             catch (Exception ex)

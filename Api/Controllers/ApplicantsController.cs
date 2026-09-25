@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using Applications.Interfaces;
 using Applications.Commands;
@@ -11,7 +11,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "RecruitmentAndHiringCanRead")]
+    // [Authorize(Policy = "RecruitmentAndHiringCanRead")]
     public class ApplicantsController : ControllerBase
     {
         private readonly IApplicantService _applicantService;
@@ -63,11 +63,18 @@ namespace ApiHrm.Controllers
         }
 
         [HttpPost("ecommerce-application")]
-        [AllowAnonymous] // Allow public access from web-ecommerce
+        // [AllowAnonymous] // Allow public access from web-ecommerce
         public async Task<ActionResult<ApplicantReadDto>> CreateEcommerceApplication([FromForm] EcommerceApplicationDto dto)
         {
-            var applicant = await _applicantService.CreateEcommerceApplicationAsync(dto);
-            return CreatedAtAction(nameof(GetAll), new { id = applicant.Applicant_Id }, applicant);
+            try
+            {
+                var applicant = await _applicantService.CreateEcommerceApplicationAsync(dto);
+                return CreatedAtAction(nameof(GetAll), new { id = applicant.Applicant_Id }, applicant);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("recent")]
@@ -104,7 +111,7 @@ namespace ApiHrm.Controllers
                 ApplicantId = id,
                 StartDate = DateTime.UtcNow,
                 ProbationaryEndDate = null,
-                HiringStage = "Regular"
+                HiringStage = "Hired"
             };
             
             var employee = await _mediator.Send(command);

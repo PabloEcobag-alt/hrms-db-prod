@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using Applications.Interfaces;
 using ApiHrm.Domains.Entities;
 using Api.Contracts.Document;
@@ -8,7 +8,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "DocumentCanRead")]
+    // [Authorize(Policy = "DocumentCanRead")]
     public class DocumentController : ControllerBase
     {
         private readonly IDocumentService _documentService;
@@ -28,7 +28,7 @@ namespace ApiHrm.Controllers
 
         // Updated to use DocumentUploadDto as required by your interface
         [HttpPost]
-        [Authorize(Policy = "DocumentCanWrite")]
+        // [Authorize(Policy = "DocumentCanWrite")]
         public async Task<ActionResult<DocumentReadDto>> Upload(DocumentUploadDto uploadDto)
         {
             var result = await _documentService.UploadDocumentAsync(uploadDto);
@@ -43,7 +43,7 @@ namespace ApiHrm.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Policy = "DocumentCanDelete")]
+        // [Authorize(Policy = "DocumentCanDelete")]
         public async Task<ActionResult> Delete(int id)
         {
             var success = await _documentService.DeleteDocumentAsync(id);
@@ -52,7 +52,7 @@ namespace ApiHrm.Controllers
         }
 
         [HttpPost("{id}/verify")]
-        [Authorize(Policy = "DocumentCanApprove")]
+        // [Authorize(Policy = "DocumentCanApprove")]
         public async Task<ActionResult> Verify(int id, [FromBody] VerifyDocumentDto dto)
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";

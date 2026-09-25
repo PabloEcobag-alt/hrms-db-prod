@@ -21,7 +21,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                     "Intern/Summer Job"
                 };
 
-                var validHiringStages = new[] { "Applied", "Initial Interview", "Final Interview", "Job Offer", "Failed" };
+                var validHiringStages = new[] { "Applied", "Initial Interview", "Final Interview", "Job Offer", "Failed", "Hired", "Probationary" };
 
                 // Sanitize existing data
                 logger.LogInformation("Sanitizing existing applicant data");

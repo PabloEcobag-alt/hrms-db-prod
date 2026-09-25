@@ -31,7 +31,7 @@ namespace ApiHrm.Infrastructures.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("ScoringBackgroundService started; awaiting applicants to score.");
+            _logger.LogInformation("ScoringBackgroundService started; awaiting new applicants to score.");
 
             await foreach (var applicantId in _queue.Reader.ReadAllAsync(stoppingToken))
             {
@@ -80,7 +80,22 @@ namespace ApiHrm.Infrastructures.BackgroundServices
             var position = string.IsNullOrWhiteSpace(applicant.Position) ? "Unspecified" : applicant.Position;
             var profile = BuildApplicantProfile(applicant);
 
-            var scoreResult = await scoringService.ScoreApplicantAsync(
+            // LAYER 3: Enterprise AI Circuit Breaker (Quota Limit)
+            // To prevent DoW (Denial of Wallet) attacks, we strictly cap OpenAI API calls.
+            var today = DateTime.UtcNow.Date;
+            var openAiUsageToday = await analyticsContext.Predictions
+                .CountAsync(p => p.CreatedAt >= today && p.ModelVersion.StartsWith("gpt-"), cancellationToken);
+
+            IScoringService activeScorer = scoringService;
+
+            // If we exceed 10 API calls today, we automatically fallback to the local free ML model.
+            if (openAiUsageToday >= 10 && scoringService.GetType().Name.Contains("OpenAI"))
+            {
+                _logger.LogWarning("AI Circuit Breaker tripped! Daily quota (10) exceeded. Falling back to LocalScoringService for Applicant {ApplicantId}.", applicantId);
+                activeScorer = provider.GetRequiredService<ILocalScoringService>();
+            }
+
+            var scoreResult = await activeScorer.ScoreApplicantAsync(
                 position, 
                 profile, 
                 applicant.Skills,

@@ -251,6 +251,25 @@ namespace Applications.Services
                 resumeUrl = $"/uploads/resumes/{uniqueFileName}";
             }
 
+            // LAYER 2: Application-Level Security (Sanitization & Deduplication)
+            // 1. Token Protection: Limit CoverLetter to prevent large payloads draining OpenAI tokens
+            if (!string.IsNullOrEmpty(dto.CoverLetter) && dto.CoverLetter.Length > 2000)
+            {
+                dto.CoverLetter = dto.CoverLetter.Substring(0, 2000);
+            }
+
+            // 2. Deduplication: Prevent spam from same Email/Mobile in the last 6 months
+            var sixMonthsAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-6));
+            var recentDuplicate = await _context.Applicants
+                .Where(a => a.Application_Date >= sixMonthsAgo && 
+                            (a.Email == dto.Email || a.Mobile == dto.Mobile))
+                .FirstOrDefaultAsync();
+
+            if (recentDuplicate != null)
+            {
+                throw new InvalidOperationException("You have already submitted an application recently. Please wait before reapplying.");
+            }
+
             // Sanitize position field to prevent string mismatches
             if (!string.IsNullOrEmpty(dto.Position))
             {

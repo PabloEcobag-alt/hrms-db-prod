@@ -5,7 +5,8 @@ using ApiHrm.Domains.Entities;
 using ApiHrm.Infrastructures.Persistence;
 using ApiHrm.Infrastructures.Persistence.Analytics;
 using Applications.Interfaces;
-
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 namespace Applications.Services
 {
     public class AnalyticsService : IAnalyticsService
@@ -15,19 +16,56 @@ namespace Applications.Services
         private readonly AnalyticsDbContext _analyticsContext;
         private readonly Channel<int> _scoringQueue;
         private readonly ILogger<AnalyticsService> _logger;
+        private readonly IDistributedCache _cache;
 
-        public AnalyticsService(IAnalyticsRepository analyticsRepository, hrmAppDbContext hrmContext, AnalyticsDbContext analyticsContext, Channel<int> scoringQueue, ILogger<AnalyticsService> logger)
+        public AnalyticsService(IAnalyticsRepository analyticsRepository, hrmAppDbContext hrmContext, AnalyticsDbContext analyticsContext, Channel<int> scoringQueue, ILogger<AnalyticsService> logger, IDistributedCache cache)
         {
             _analyticsRepository = analyticsRepository;
             _hrmContext = hrmContext;
             _analyticsContext = analyticsContext;
             _scoringQueue = scoringQueue;
             _logger = logger;
+            _cache = cache;
+        }
+
+        private async Task<T> GetCachedAsync<T>(string cacheKey, Func<Task<T>> dataFactory, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var cachedData = await _cache.GetStringAsync(cacheKey, cancellationToken);
+                if (!string.IsNullOrEmpty(cachedData))
+                {
+                    return JsonSerializer.Deserialize<T>(cachedData)!;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to read from cache for key: {CacheKey}", cacheKey);
+            }
+
+            var data = await dataFactory();
+
+            try
+            {
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                };
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(data), options, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to write to cache for key: {CacheKey}", cacheKey);
+            }
+
+            return data;
         }
 
         public async Task<HrmsDashboardSummaryDto> GetHrmsDashboardSummaryAsync(CancellationToken cancellationToken = default)
         {
-            try
+            return await GetCachedAsync("HrmsDashboardSummary", async () => 
+            {
+                try
             {
                 var totalEmployees = await _hrmContext.Employees.CountAsync(cancellationToken);
                 var regularEmployees = await _hrmContext.Employees.CountAsync(e => e.Status == "Regular", cancellationToken);
@@ -56,13 +94,28 @@ namespace Applications.Services
                 _logger.LogError(ex, "Error fetching HRMS dashboard summary");
                 return new HrmsDashboardSummaryDto();
             }
+            }, cancellationToken);
         }
 
-        public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
+        public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
         {
-            try
+            string cacheKey = $"DashboardSummary_{startDate?.ToString("yyyyMMdd")}_{endDate?.ToString("yyyyMMdd")}";
+            return await GetCachedAsync(cacheKey, async () => 
+            {
+                try
             {
                 var predictions = await _analyticsRepository.GetAllPredictionsAsync(cancellationToken);
+                
+                // Apply date filtering
+                if (startDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt >= startDate.Value).ToList();
+                }
+                if (endDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt <= endDate.Value.AddDays(1)).ToList();
+                }
+                
                 var totalScored = predictions.Count;
                 
                 // Get total applicants from PostgreSQL for accurate count
@@ -96,13 +149,27 @@ namespace Applications.Services
                 _logger.LogError(ex, "Error fetching dashboard summary from analytics repository");
                 return new DashboardSummaryDto();
             }
+            }, cancellationToken);
         }
 
-        public async Task<ScoreDistributionDto> GetScoreDistributionAsync(CancellationToken cancellationToken = default)
+        public async Task<ScoreDistributionDto> GetScoreDistributionAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
         {
-            try
+            string cacheKey = $"ScoreDistribution_{startDate?.ToString("yyyyMMdd")}_{endDate?.ToString("yyyyMMdd")}";
+            return await GetCachedAsync(cacheKey, async () => 
+            {
+                try
             {
                 var predictions = await _analyticsRepository.GetAllPredictionsAsync(cancellationToken);
+                
+                // Apply date filtering
+                if (startDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt >= startDate.Value).ToList();
+                }
+                if (endDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt <= endDate.Value.AddDays(1)).ToList();
+                }
                 var bucketRanges = new List<(string Label, double Min, double Max)>
                 {
                     ("90-100", 90, 100),
@@ -132,13 +199,26 @@ namespace Applications.Services
                 _logger.LogWarning(ex, "Error fetching score distribution from analytics repository");
                 return new ScoreDistributionDto { Buckets = new List<ScoreBucketDto>() };
             }
+            }, cancellationToken);
         }
 
-        public async Task<IReadOnlyList<TopCandidateDto>> GetTopCandidatesAsync(int count, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<TopCandidateDto>> GetTopCandidatesAsync(int count, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
         {
             try
             {
-                var topPredictions = await _analyticsRepository.GetTopPredictionsAsync(count, cancellationToken);
+                var predictions = await _analyticsRepository.GetAllPredictionsAsync(cancellationToken);
+                
+                // Apply date filtering
+                if (startDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt >= startDate.Value).ToList();
+                }
+                if (endDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt <= endDate.Value.AddDays(1)).ToList();
+                }
+                
+                var topPredictions = predictions.OrderByDescending(p => p.MatchScore).Take(count).ToList();
 
                 var candidateIds = topPredictions
                     .Select(p => int.TryParse(p.CandidateId, out var id) ? (int?)id : null)
@@ -150,9 +230,7 @@ namespace Applications.Services
                 var applicants = await _hrmContext.Applicants
                     .AsNoTracking()
                     .Where(a => candidateIds.Contains(a.Applicant_ID) && 
-                               a.Hiring_Stage != "Failed" && 
-                               a.Hiring_Stage != "Hired" && 
-                               a.Hiring_Stage != "Probationary")
+                               a.Hiring_Stage != "Failed")
                     .ToDictionaryAsync(a => a.Applicant_ID, cancellationToken);
 
                 var result = new List<TopCandidateDto>();
@@ -189,11 +267,24 @@ namespace Applications.Services
             }
         }
 
-        public async Task<IReadOnlyList<PositionFitDto>> GetPositionFitAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<PositionFitDto>> GetPositionFitAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
         {
-            try
+            string cacheKey = $"PositionFit_{startDate?.ToString("yyyyMMdd")}_{endDate?.ToString("yyyyMMdd")}";
+            return await GetCachedAsync(cacheKey, async () => 
+            {
+                try
             {
                 var predictions = await _analyticsRepository.GetAllPredictionsAsync(cancellationToken);
+
+                // Apply date filtering
+                if (startDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt >= startDate.Value).ToList();
+                }
+                if (endDate.HasValue)
+                {
+                    predictions = predictions.Where(p => p.CreatedAt <= endDate.Value.AddDays(1)).ToList();
+                }
 
                 var validPredictions = predictions
                     .Where(p => int.TryParse(p.CandidateId, out _))
@@ -258,6 +349,7 @@ namespace Applications.Services
                 _logger.LogError(ex, "Error fetching position fit data from PostgreSQL applicants");
                 return new List<PositionFitDto>();
             }
+            }, cancellationToken);
         }
 
         public async Task<IReadOnlyList<PredictionDto>> GetPredictionsAsync(int page = 1, int pageSize = 50, CancellationToken cancellationToken = default)
@@ -320,7 +412,10 @@ namespace Applications.Services
 
         public async Task<IReadOnlyList<ApplicationTrendDto>> GetApplicationTrendsAsync(DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default)
         {
-            try
+            string cacheKey = $"ApplicationTrends_{startDate?.ToString("yyyyMMdd")}_{endDate?.ToString("yyyyMMdd")}";
+            return await GetCachedAsync(cacheKey, async () => 
+            {
+                try
             {
                 // Pure dynamic data floor: if startDate is null, get earliest date from database
                 if (!startDate.HasValue)
@@ -401,6 +496,7 @@ namespace Applications.Services
                 _logger.LogError(ex, "Error fetching application trends from analytics repository");
                 return new List<ApplicationTrendDto>();
             }
+            }, cancellationToken);
         }
 
         private string NormalizePosition(string position)
@@ -437,9 +533,7 @@ namespace Applications.Services
                 var applicants = await _hrmContext.Applicants
                     .AsNoTracking()
                     .Where(a => candidateIds.Contains(a.Applicant_ID) &&
-                               a.Hiring_Stage != "Failed" &&
-                               a.Hiring_Stage != "Hired" &&
-                               a.Hiring_Stage != "Probationary")
+                               a.Hiring_Stage != "Failed")
                     .ToDictionaryAsync(a => a.Applicant_ID, cancellationToken);
 
                 var result = new List<TopCandidateDto>();

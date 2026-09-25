@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+// using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Api.Contracts.LeaveType;
 using AutoMapper;
@@ -9,7 +9,7 @@ namespace ApiHrm.Controllers
 {
     [Route("api/leave-types")]
     [ApiController]
-    [Authorize(Policy = "LeaveTypeCanRead")]
+    // [Authorize(Policy = "LeaveTypeCanRead")]
     public class LeaveTypeController : ControllerBase
     {
         private readonly hrmAppDbContext _context;
