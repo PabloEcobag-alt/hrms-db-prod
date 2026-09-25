@@ -21,7 +21,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                     "Intern/Summer Job"
                 };
 
-                var validHiringStages = new[] { "Applied", "Initial Interview", "Final Interview", "Job Offer", "Failed", "Hired", "Probationary" };
+                var validHiringStages = new[] { "Applied", "Initial Interview", "Final Interview", "Job Offer", "Failed" };
 
                 // Sanitize existing data
                 logger.LogInformation("Sanitizing existing applicant data");
@@ -123,7 +123,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                         Extension_Name = random.Next(5) == 0 ? "Jr." : null,
                         Position = position,
                         Email = $"{firstName.ToLower()}.{lastName.ToLower()}@example.com",
-                        Mobile = $"+63{random.Next(900, 999)}{random.Next(10000000, 99999999)}",
+                        Mobile = $"+639{random.Next(10, 100):D2}{random.Next(1000000, 10000000):D7}",
                         Contact_Details = random.Next(2) == 0 ? "Available for interview" : null,
                         Payment_Method = random.Next(2) == 0 ? "Bank Transfer" : null,
                         Resume_URL = $"https://example.com/resumes/{firstName}_{lastName}.pdf",

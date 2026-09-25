@@ -95,6 +95,118 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                             PhoneNumber = "09111111111",
                             PresentAddress = "789 Tech Blvd, Makati"
                         }
+                    },
+                    new Employee
+                    {
+                        ErpUserId = null,
+                        FirstName = "Alice",
+                        LastName = "SuperAdmin",
+                        MiddleName = null,
+                        DateOfBirth = new DateOnly(1980, 5, 10),
+                        Gender = "Female",
+                        CivilStatus = "Married",
+                        AvatarIndex = 3,
+                        BloodType = "A+",
+                        Role_ID = 1,
+                        Status = "Active",
+                        EmploymentDetails = new EmploymentDetails
+                        {
+                            Department = "Management",
+                            Position = "Super Admin",
+                            HireDate = new DateOnly(2023, 1, 1),
+                            BasePay = 100000,
+                            EmploymentStatus = "Active"
+                        },
+                        ContactInformation = new ContactInformation
+                        {
+                            EmailAddress = "alice@example.com",
+                            PhoneNumber = "09171234567",
+                            PresentAddress = "123 Management Blvd, BGC"
+                        }
+                    },
+                    new Employee
+                    {
+                        ErpUserId = null,
+                        FirstName = "Bob",
+                        LastName = "Employee",
+                        MiddleName = null,
+                        DateOfBirth = new DateOnly(1995, 8, 15),
+                        Gender = "Male",
+                        CivilStatus = "Single",
+                        AvatarIndex = 4,
+                        BloodType = "O+",
+                        Role_ID = 1,
+                        Status = "Active",
+                        EmploymentDetails = new EmploymentDetails
+                        {
+                            Department = "Operations",
+                            Position = "Staff",
+                            HireDate = new DateOnly(2024, 3, 1),
+                            BasePay = 35000,
+                            EmploymentStatus = "Active"
+                        },
+                        ContactInformation = new ContactInformation
+                        {
+                            EmailAddress = "bob@example.com",
+                            PhoneNumber = "09181234567",
+                            PresentAddress = "456 Operations St, Pasig"
+                        }
+                    },
+                    new Employee
+                    {
+                        ErpUserId = null,
+                        FirstName = "Carol",
+                        LastName = "SuperAdmin",
+                        MiddleName = null,
+                        DateOfBirth = new DateOnly(1982, 11, 20),
+                        Gender = "Female",
+                        CivilStatus = "Single",
+                        AvatarIndex = 5,
+                        BloodType = "B+",
+                        Role_ID = 1,
+                        Status = "Active",
+                        EmploymentDetails = new EmploymentDetails
+                        {
+                            Department = "Management",
+                            Position = "Super Admin",
+                            HireDate = new DateOnly(2023, 2, 1),
+                            BasePay = 95000,
+                            EmploymentStatus = "Active"
+                        },
+                        ContactInformation = new ContactInformation
+                        {
+                            EmailAddress = "carol@example.com",
+                            PhoneNumber = "09191234567",
+                            PresentAddress = "789 Admin Ave, Makati"
+                        }
+                    },
+                    new Employee
+                    {
+                        ErpUserId = null,
+                        FirstName = "Derek",
+                        LastName = "Executive",
+                        MiddleName = null,
+                        DateOfBirth = new DateOnly(1975, 4, 5),
+                        Gender = "Male",
+                        CivilStatus = "Married",
+                        AvatarIndex = 6,
+                        BloodType = "AB+",
+                        Role_ID = 1,
+                        Status = "Active",
+                        EmploymentDetails = new EmploymentDetails
+                        {
+                            Department = "Executive",
+                            Position = "CEO",
+                            HireDate = new DateOnly(2022, 1, 15),
+                            BasePay = 250000,
+                            EmploymentStatus = "Active"
+                        },
+                        ContactInformation = new ContactInformation
+                        {
+                            EmailAddress = "derek@example.com",
+                            PhoneNumber = "09201234567",
+                            PresentAddress = "101 Executive Village, Alabang"
+                        }
                     }
                 };
 
@@ -110,7 +222,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                     {
                         First_Name = "Michael",
                         Last_Name = "Johnson",
-                        Position = "Senior Developer",
+                        Position = "Store Attendant",
                         Email = "michael.johnson@example.com",
                         Mobile = "09234567890",
                         Status = "Pending",
@@ -123,7 +235,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                     {
                         First_Name = "Sarah",
                         Last_Name = "Williams",
-                        Position = "UX Designer",
+                        Position = "Merchandiser On Call",
                         Email = "sarah.williams@example.com",
                         Mobile = "09234567891",
                         Status = "Interviewed",
@@ -136,7 +248,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                     {
                         First_Name = "David",
                         Last_Name = "Brown",
-                        Position = "Project Manager",
+                        Position = "Commissary Helper",
                         Email = "david.brown@example.com",
                         Mobile = "09234567892",
                         Status = "Pending",
