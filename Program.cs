@@ -154,7 +154,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
 // Database connection string from Environment variables (Docker deployment)
-var connectionString =
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
     $"Host={Environment.GetEnvironmentVariable("POSTGRES_DB_HOST") ?? "localhost"};" +
     $"Port={Environment.GetEnvironmentVariable("POSTGRES_DB_PORT") ?? "5432"};" +
     $"Database=hrm_db;" +
