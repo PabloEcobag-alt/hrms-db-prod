@@ -272,6 +272,7 @@ if (app.Environment.IsDevelopment())
         options.DocumentPath = "/api/hrms/openapi/v1.json";
     });
 }
+app.UseDeveloperExceptionPage();
 
 
 
