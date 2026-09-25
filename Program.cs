@@ -153,13 +153,33 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
-// Database connection string from Environment variables (Docker deployment)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-    $"Host={Environment.GetEnvironmentVariable("POSTGRES_DB_HOST") ?? "localhost"};" +
-    $"Port={Environment.GetEnvironmentVariable("POSTGRES_DB_PORT") ?? "5432"};" +
-    $"Database=hrm_db;" +
-    $"Username={Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "postgres"};" +
-    $"Password={Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "postgres"}";
+var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(rawConnectionString))
+{
+    rawConnectionString = $"Host={Environment.GetEnvironmentVariable("POSTGRES_DB_HOST") ?? "localhost"};" +
+        $"Port={Environment.GetEnvironmentVariable("POSTGRES_DB_PORT") ?? "5432"};" +
+        $"Database=hrm_db;" +
+        $"Username={Environment.GetEnvironmentVariable("POSTGRES_USERNAME") ?? "postgres"};" +
+        $"Password={Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "postgres"}";
+}
+
+var connectionString = rawConnectionString;
+if (connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) || 
+    connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+{
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    var builderCs = new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.IsDefaultPort ? 5432 : uri.Port,
+        Database = uri.LocalPath.TrimStart('/'),
+        Username = userInfo[0],
+        Password = userInfo.Length > 1 ? userInfo[1] : "",
+        SslMode = Npgsql.SslMode.Require
+    };
+    connectionString = builderCs.ToString();
+}
 
 builder.Services.AddSingleton<AuditInterceptor>();
 builder.Services.AddDbContext<hrmAppDbContext>((serviceProvider, options) =>
@@ -179,7 +199,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 builder.Services.AddDbContext<AnalyticsDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
