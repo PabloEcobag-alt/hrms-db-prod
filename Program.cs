@@ -135,7 +135,7 @@ builder.Services.AddAuthorization(options =>
 });
 */
 
-var webHrmsUrls = Environment.GetEnvironmentVariable("WEB_HRMS_URL")?.Split(',') ?? new[] { "https://localhost:3001", "https://hrms-three-orpin.vercel.app", "https://deploy-web-hrms.vercel.app" };
+var webHrmsUrls = Environment.GetEnvironmentVariable("WEB_HRMS_URL")?.Split(',') ?? new[] { "https://localhost:3001", "https://hrms-three-orpin.vercel.app", "https://deploy-web-hrms-three.vercel.app" };
 
 builder.Services.AddCors(options =>
 {
