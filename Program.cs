@@ -178,12 +178,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "HRMS_";
 });
 
-// SQLite Analytics Database Configuration
-var dataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
-Directory.CreateDirectory(dataDirectory);
-var sqliteConnectionString = $"Data Source={Path.Combine(dataDirectory, "recruitment_analytics.db")}";
 builder.Services.AddDbContext<AnalyticsDbContext>(options =>
-    options.UseSqlite(sqliteConnectionString));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
