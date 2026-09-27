@@ -239,7 +239,7 @@ builder.Services.AddSingleton(Channel.CreateUnbounded<int>(new UnboundedChannelO
 // and does not depend on external API keys.
 builder.Services.AddScoped<ILocalScoringService, LocalScoringService>();
 
-var scoringProvider = Environment.GetEnvironmentVariable("SCORING_PROVIDER") ?? "Local";
+var scoringProvider = Environment.GetEnvironmentVariable("SCORING_PROVIDER") ?? "OpenAI";
 
 // SECURITY: API key is read ONLY from the environment. Never hardcoded.
 var openAiApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
