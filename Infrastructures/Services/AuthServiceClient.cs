@@ -28,7 +28,11 @@ namespace ApiHrm.Infrastructures.Services
         {
             _httpClient.DefaultRequestHeaders.Add("X-Internal-Token", "HrAppInternalTokenSecret");
 
-            var authBaseUrl = Environment.GetEnvironmentVariable("JWT_AUTHORITY") ?? "https://localhost:5001";
+            var authBaseUrl = Environment.GetEnvironmentVariable("JWT_AUTHORITY");
+            if (string.IsNullOrEmpty(authBaseUrl) || authBaseUrl.Contains("localhost"))
+            {
+                authBaseUrl = "https://br-auth-service-prod.azurewebsites.net";
+            }
             var endpoint = $"{authBaseUrl.TrimEnd('/')}/api/users/internal";
 
             var response = await _httpClient.PostAsJsonAsync(endpoint, request);
