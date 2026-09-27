@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace api_hrm.Infrastructures.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddMissingApplicantColumns_Proper : Migration
+    public partial class AddMoreMissingApplicantColumns : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,6 +14,13 @@ namespace api_hrm.Infrastructures.Persistence.Migrations
             migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Experience\" text NULL;");
             migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Extension_Name\" text NULL;");
             migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Skills\" text NULL;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Interview_Notes\" text NULL;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Interview_Date\" date NULL;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Expected_Start_Date\" date NULL;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Probationary_End_Date\" date NULL;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"Medical_Document_Completed\" boolean NOT NULL DEFAULT false;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"NBI_Document_Completed\" boolean NOT NULL DEFAULT false;");
+            migrationBuilder.Sql("ALTER TABLE \"r_Applicant_Records\" ADD COLUMN IF NOT EXISTS \"XRay_Document_Completed\" boolean NOT NULL DEFAULT false;");
         }
 
         /// <inheritdoc />
