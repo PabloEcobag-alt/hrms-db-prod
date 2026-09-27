@@ -66,7 +66,7 @@ namespace ApiHrm.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Database unavailable for dashboard summary; returning empty state");
-                return Ok(new DashboardSummaryDto());
+                return Ok(new { error = ex.ToString() });
             }
         }
 
@@ -83,7 +83,7 @@ namespace ApiHrm.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Database unavailable for score distribution; returning empty state");
-                return Ok(new ScoreDistributionDto { Buckets = new List<ScoreBucketDto>() });
+                return Ok(new { error = ex.ToString() });
             }
         }
 
@@ -135,8 +135,14 @@ namespace ApiHrm.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Database unavailable for predictions; returning empty list");
-                return Ok(new List<PredictionDto>());
+                return Ok(new { error = ex.ToString() });
             }
+        }
+
+        [HttpGet("diagnostics")]
+        public ActionResult GetDiagnostics()
+        {
+            return Ok(ApiHrm.Infrastructures.BackgroundServices.ScoringBackgroundService.Errors);
         }
 
         [HttpPost("rescore")]

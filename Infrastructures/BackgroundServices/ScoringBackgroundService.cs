@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using System.Collections.Concurrent;
 using Applications.Interfaces;
 using Applications.Models;
 using ApiHrm.Domains.Entities;
@@ -18,6 +19,8 @@ namespace ApiHrm.Infrastructures.BackgroundServices
         private readonly Channel<int> _queue;
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ScoringBackgroundService> _logger;
+
+        public static readonly ConcurrentBag<string> Errors = new();
 
         public ScoringBackgroundService(
             Channel<int> queue,
@@ -45,6 +48,7 @@ namespace ApiHrm.Infrastructures.BackgroundServices
                 }
                 catch (Exception ex)
                 {
+                    Errors.Add($"[{DateTime.UtcNow:O}] Error scoring applicant {applicantId}: {ex.Message} \n {ex.StackTrace}");
                     _logger.LogError(ex, "Failed to score applicant {ApplicantId}", applicantId);
                 }
             }
