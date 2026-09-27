@@ -151,7 +151,7 @@ namespace ApiHrm.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Database unavailable for rescore; returning zero count");
-                return Ok(new { message = "Database unavailable", count = 0 });
+                return Ok(new { message = "Database unavailable", error = ex.ToString(), count = 0 });
             }
         }
 

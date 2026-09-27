@@ -406,7 +406,7 @@ namespace Applications.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error rescoring applicants - failed to fetch from PostgreSQL");
-                return 0;
+                throw;
             }
         }
 
