@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace api_hrm.Infrastructures.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddMissingApplicantColumns : Migration
+    public partial class AddMissingApplicantColumns_Proper : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
