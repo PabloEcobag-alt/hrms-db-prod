@@ -199,7 +199,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 builder.Services.AddDbContext<AnalyticsDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseSqlite("Data Source=data/analytics.db"));
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
@@ -343,39 +343,27 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Initialize Analytics Database tables (Predictions & SummaryReports)
+// Initialize SQLite Analytics Database (separate from PostgreSQL)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var analyticsDbContext = services.GetRequiredService<AnalyticsDbContext>();
-        // EnsureCreatedAsync won't create tables if the database already exists (from hrmAppDbContext).
-        // We must manually create them using raw SQL if they don't exist.
-        var sql = @"
-            CREATE TABLE IF NOT EXISTS ""Predictions"" (
-                ""Id"" SERIAL PRIMARY KEY,
-                ""CandidateId"" text NOT NULL,
-                ""MatchScore"" double precision NOT NULL,
-                ""ScreeningResult"" text NOT NULL,
-                ""ModelVersion"" text NOT NULL,
-                ""CreatedAt"" timestamp with time zone NOT NULL
-            );
+        
+        // Ensure data directory exists for SQLite
+        var dbDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+        if (!Directory.Exists(dbDirectory))
+        {
+            Directory.CreateDirectory(dbDirectory);
+        }
 
-            CREATE TABLE IF NOT EXISTS ""SummaryReports"" (
-                ""Id"" SERIAL PRIMARY KEY,
-                ""ReportType"" text NOT NULL,
-                ""ReportDate"" timestamp with time zone NOT NULL,
-                ""SummaryData"" text NOT NULL,
-                ""CreatedAt"" timestamp with time zone NOT NULL
-            );
-        ";
-        await analyticsDbContext.Database.ExecuteSqlRawAsync(sql);
+        await analyticsDbContext.Database.EnsureCreatedAsync();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred during analytics database initialization on startup.");
+        logger.LogError(ex, "An error occurred during SQLite analytics database initialization on startup.");
     }
 }
 
