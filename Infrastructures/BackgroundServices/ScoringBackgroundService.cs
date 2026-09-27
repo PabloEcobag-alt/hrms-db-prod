@@ -93,11 +93,14 @@ namespace ApiHrm.Infrastructures.BackgroundServices
             IScoringService activeScorer = scoringService;
 
             // If we exceed 10 API calls today, we automatically fallback to the local free ML model.
+            // TEMPORARILY DISABLED AS REQUESTED BY USER
+            /*
             if (openAiUsageToday >= 10 && scoringService.GetType().Name.Contains("OpenAI"))
             {
                 _logger.LogWarning("AI Circuit Breaker tripped! Daily quota (10) exceeded. Falling back to LocalScoringService for Applicant {ApplicantId}.", applicantId);
                 activeScorer = provider.GetRequiredService<ILocalScoringService>();
             }
+            */
 
             var scoreResult = await activeScorer.ScoreApplicantAsync(
                 position, 
