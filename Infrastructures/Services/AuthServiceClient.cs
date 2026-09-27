@@ -31,7 +31,7 @@ namespace ApiHrm.Infrastructures.Services
             var authBaseUrl = Environment.GetEnvironmentVariable("JWT_AUTHORITY");
             if (string.IsNullOrEmpty(authBaseUrl) || authBaseUrl.Contains("localhost"))
             {
-                authBaseUrl = "https://br-auth-service-prod.azurewebsites.net";
+                authBaseUrl = "https://br-auth-service-prod-bgdqfteyatgce4ej.australiaeast-01.azurewebsites.net";
             }
             var endpoint = $"{authBaseUrl.TrimEnd('/')}/api/users/internal";
 
