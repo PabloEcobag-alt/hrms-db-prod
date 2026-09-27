@@ -28,7 +28,10 @@ namespace ApiHrm.Infrastructures.Services
         {
             _httpClient.DefaultRequestHeaders.Add("X-Internal-Token", "HrAppInternalTokenSecret");
 
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:5001/api/users/internal", request);
+            var authBaseUrl = Environment.GetEnvironmentVariable("JWT_AUTHORITY") ?? "https://localhost:5001";
+            var endpoint = $"{authBaseUrl.TrimEnd('/')}/api/users/internal";
+
+            var response = await _httpClient.PostAsJsonAsync(endpoint, request);
 
             if (!response.IsSuccessStatusCode)
             {
