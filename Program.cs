@@ -199,7 +199,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 builder.Services.AddDbContext<AnalyticsDbContext>(options =>
-    options.UseSqlite("Data Source=data/analytics.db"));
+    options.UseSqlite("Data Source=data/recruitment_analytics.db"));
 
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
