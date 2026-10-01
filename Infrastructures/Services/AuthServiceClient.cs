@@ -29,7 +29,7 @@ namespace ApiHrm.Infrastructures.Services
             _httpClient.DefaultRequestHeaders.Add("X-Internal-Token", "HrAppInternalTokenSecret");
 
             var authBaseUrl = Environment.GetEnvironmentVariable("JWT_AUTHORITY");
-            if (string.IsNullOrEmpty(authBaseUrl) || authBaseUrl.Contains("localhost"))
+            if (string.IsNullOrEmpty(authBaseUrl) || authBaseUrl.Contains("localhost") || authBaseUrl.Contains("br-auth-service-prod.azurewebsites.net"))
             {
                 authBaseUrl = "https://br-auth-service-prod-bgdqfteyatgce4ej.australiaeast-01.azurewebsites.net";
             }
