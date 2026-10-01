@@ -262,6 +262,51 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                 context.Applicants.AddRange(applicants);
             }
 
+            // --- PATCH TO FIX APPLICANTS AND REMOVE UNLINKED EMPLOYEES ---
+            
+            // Task 1: Fix transformed applicants
+            var applicantIdsToFix = new[] { 51, 52, 53 };
+            var applicantsToFix = await context.Applicants
+                .Where(a => applicantIdsToFix.Contains(a.Applicant_ID))
+                .ToListAsync();
+
+            foreach (var a in applicantsToFix)
+            {
+                if (a.Probationary_End_Date.HasValue)
+                {
+                    a.Hiring_Stage = "Probationary";
+                    a.Status = "Probationary";
+                }
+                else
+                {
+                    a.Hiring_Stage = "Hired";
+                    a.Status = "Regular";
+                }
+            }
+
+            // Task 2: Delete seeded employees 1, 2, 3 and related records
+            var employeeIdsToDelete = new[] { 1, 2, 3 };
+            var employeesToDelete = await context.Employees
+                .Where(e => employeeIdsToDelete.Contains(e.EmployeeId))
+                .ToListAsync();
+            
+            if (employeesToDelete.Any())
+            {
+                // Due to RESTRICT constraints, delete related records first
+                var contactInfos = await context.ContactInformation
+                    .Where(ci => employeeIdsToDelete.Contains(ci.EmployeeId))
+                    .ToListAsync();
+                context.ContactInformation.RemoveRange(contactInfos);
+
+                var empDetails = await context.EmploymentDetails
+                    .Where(ed => employeeIdsToDelete.Contains(ed.EmployeeId))
+                    .ToListAsync();
+                context.EmploymentDetails.RemoveRange(empDetails);
+
+                context.Employees.RemoveRange(employeesToDelete);
+            }
+            // --- END PATCH ---
+
             await context.SaveChangesAsync();
         }
     }
