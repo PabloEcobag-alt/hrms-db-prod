@@ -8,7 +8,7 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
         public static async Task SeedTestDataAsync(hrmAppDbContext context)
         {
             // Seed unregistered employees (no ErpUserId) - only if they don't exist
-            if (!await context.Employees.AnyAsync(e => e.FirstName == "John" && e.LastName == "Doe"))
+            if (!await context.Employees.AnyAsync(e => e.FirstName == "Alice" && e.LastName == "SuperAdmin"))
             {
                 var unregisteredEmployees = new List<Employee>
                 {
@@ -284,14 +284,34 @@ namespace ApiHrm.Infrastructures.Persistence.Seeders
                 }
             }
 
-            // Task 2: Delete seeded employees 1, 2, 3 and related records
-            var employeeIdsToDelete = new[] { 1, 2, 3 };
-            var employeesToDelete = await context.Employees
-                .Where(e => employeeIdsToDelete.Contains(e.EmployeeId))
+            // Task 2: Cleanup duplicate and dummy seeded employees
+            var targetFirstNames = new[] { "John", "Jane", "Admin", "Alice", "Bob", "Carol", "Derek" };
+            var allTargetEmployees = await context.Employees
+                .Where(e => targetFirstNames.Contains(e.FirstName))
                 .ToListAsync();
-            
+
+            var employeesToDelete = allTargetEmployees
+                .Where(e => (e.FirstName == "John" && e.LastName == "Doe") ||
+                            (e.FirstName == "Jane" && e.LastName == "Smith") ||
+                            (e.FirstName == "Admin" && e.LastName == "User"))
+                .ToList();
+
+            // Deduplicate Alice, Bob, Carol, Derek (keep the first one)
+            var duplicateNames = new[] { "Alice", "Bob", "Carol", "Derek" };
+            foreach (var firstName in duplicateNames)
+            {
+                var duplicates = allTargetEmployees
+                    .Where(e => e.FirstName == firstName)
+                    .OrderBy(e => e.EmployeeId)
+                    .Skip(1)
+                    .ToList();
+                employeesToDelete.AddRange(duplicates);
+            }
+
             if (employeesToDelete.Any())
             {
+                var employeeIdsToDelete = employeesToDelete.Select(e => e.EmployeeId).ToList();
+                
                 // Due to RESTRICT constraints, delete related records first
                 var contactInfos = await context.ContactInformation
                     .Where(ci => employeeIdsToDelete.Contains(ci.EmployeeId))
